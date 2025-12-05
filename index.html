@@ -250,7 +250,7 @@
         // In Vercel, these should be set in Project Settings.
         // For local testing in this file, we use fallback values if process.env is missing.
         const SUPABASE_URL = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || 'https://qtwnkyeaecdumjkokdbk.supabase.co';
-        const SUPABASE_KEY = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_KEY) || 'sb_publishable_ltaNA7nnVozoSCOcZIjg';
+       const SUPABASE_KEY = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0d25reWVhZWNkdW1qa29rZGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NTI0MzYsImV4cCI6MjA4MDQyODQzNn0.FVxRtqGnjLXMGvVDR9jF_1oYCXMNyjnmIaNtCFMPD2o';
 
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -553,3 +553,4 @@
     </script>
 </body>
 </html>
+
