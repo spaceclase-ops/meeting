@@ -523,10 +523,11 @@
         document.getElementById('close-modal-btn').onclick = closeModal;
         document.getElementById('cancel-modal-btn').onclick = closeModal;
         
-        els.meetingForm.onsubmit = (e) => {
+     els.meetingForm.onsubmit = (e) => {
             e.preventDefault();
             const id = document.getElementById('meeting-id').value;
             const meeting = {
+                user_id: state.user.id, // <--- הנה השורה החסרה שהוספנו!
                 client_name: document.getElementById('m-clientName').value,
                 date: document.getElementById('m-date').value,
                 time: document.getElementById('m-time').value,
@@ -542,7 +543,6 @@
             if(id) meeting.id = id;
             saveMeeting(meeting);
         };
-
         // --- FILTERS ---
         els.dateStart.onchange = (e) => { state.filterStart = e.target.value; fetchMeetings(); };
         els.dateEnd.onchange = (e) => { state.filterEnd = e.target.value; fetchMeetings(); };
@@ -553,4 +553,5 @@
     </script>
 </body>
 </html>
+
 
