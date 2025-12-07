@@ -1,460 +1,443 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>לוח פגישות אונליין - סניף נשר</title>    
-    <!-- Tailwind CSS -->
+    <title>לוח פגישות אונליין - סניף נשר</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: { sans: ['Heebo', 'sans-serif'] },
             colors: {
-              primary: { 50: '#f5f3ff', 100: '#ede9fe', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
-              secondary: { 50: '#fff1f2', 500: '#f43f5e', 600: '#e11d48' },
-              emerald: { 50: '#ecfdf5', 500: '#10b981', 600: '#059669' }
+              // פלטת צבעים חדשה ויוקרתית (סגול עתידני)
+              primary: { 50: '#f3f1ff', 100: '#ebe5ff', 200: '#d9cfff', 300: '#bea6ff', 400: '#a17aff', 500: '#844dff', 600: '#793af2', 700: '#6b2bd9', 800: '#5a24b3', 900: '#4b1e95', 950: '#2c0f5e' },
+              dark: { 800: '#1e1e2e', 900: '#11111b', 950: '#0a0a0f' } // רקעים כהים עמוקים
             },
             boxShadow: {
-              'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-              'glow': '0 0 15px rgba(139, 92, 246, 0.3)',
+              'glow': '0 0 20px rgba(132, 77, 255, 0.4)',
+              'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+            },
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'cyber-grid': 'linear-gradient(rgba(132, 77, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(132, 77, 255, 0.1) 1px, transparent 1px)'
             }
           },
         },
       }
     </script>
     <style>
-        body { background-color: #f8fafc; }
-        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-        .hide { display: none !important; }
+        /* רקע כללי כהה עם טקסטורת רשת עדינה */
+        body { 
+            background-color: #0a0a0f; 
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(132, 77, 255, 0.15), transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 20px 20px, 20px 20px;
+            color: #e2e8f0;
+        }
         
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-in { animation: fadeIn 0.3s ease-out forwards; }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1"
-  }
-}
-</script>
-</head>
-<body class="text-slate-800 antialiased">
-    <!-- Placeholder for React Root to prevent errors if index.tsx runs inadvertently -->
-    <div id="root" style="display:none;"></div>
+        /* אפקט זכוכית */
+        .glass { 
+            background: rgba(30, 30, 46, 0.70); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        
+        .glass-light {
+             background: rgba(255, 255, 255, 0.05);
+             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    <div id="app" class="min-h-screen relative">
-        <!-- Auth Screen -->
-        <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 bg-opacity-50 backdrop-blur-sm hide">
-            <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md animate-in">
-                <div class="text-center mb-8">
-                    <div class="inline-flex p-3 rounded-2xl bg-primary-100 text-primary-600 mb-4">
-                        <i data-lucide="shield" class="w-8 h-8"></i>
+        /* סרגל גלילה מותאם */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #4b1e95; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b2bd9; }
+
+        .hide { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        /* תיקון לטבלאות במובייל */
+        @media (max-width: 768px) {
+            .mobile-card { @apply glass p-4 rounded-2xl mb-4 border-0; }
+        }
+    </style>
+</head>
+<body class="antialiased tracking-tight">
+    <div id="app" class="min-h-screen relative overflow-hidden">
+        <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 hide">
+            <div class="absolute inset-0 bg-gradient-radial from-primary-900/20 to-transparent opacity-40"></div>
+            
+            <div class="glass p-8 sm:p-10 rounded-[2rem] shadow-glass w-full max-w-md animate-in relative z-10">
+                <div class="text-center mb-10">
+                    <div class="inline-flex p-4 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white mb-6 shadow-glow">
+                        <i data-lucide="shield-check" class="w-10 h-10"></i>
                     </div>
-                    <h2 class="text-2xl font-black text-slate-800">התחברות למערכת</h2>
-                    <h2 class="text-2xl font-black text-slate-800">התחברות למערכת</h2>
-                    <p class="text-slate-500 text-sm mt-2">סניף נשר</p>
+                    <h2 class="text-3xl font-black text-white tracking-tight">התחברות למערכת</h2>
+                    <p class="text-slate-400 text-sm mt-2 font-medium uppercase tracking-wide">סניף נשר</p>
                 </div>
-                <form id="login-form" class="space-y-4">
+                <form id="login-form" class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">אימייל</label>
-                        <input type="email" id="email" required class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                        <label class="block text-xs font-bold text-primary-300 mb-2 uppercase tracking-wider">אימייל</label>
+                        <div class="relative">
+                            <i data-lucide="mail" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                            <input type="email" id="email" required class="w-full pr-12 pl-4 py-3.5 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600" placeholder="שם משתמש">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">סיסמה</label>
-                        <input type="password" id="password" required class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all">
+                        <label class="block text-xs font-bold text-primary-300 mb-2 uppercase tracking-wider">סיסמה</label>
+                        <div class="relative">
+                             <i data-lucide="lock" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                            <input type="password" id="password" required class="w-full pr-12 pl-4 py-3.5 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600" placeholder="••••••••">
+                        </div>
                     </div>
-                    <div id="login-error" class="text-rose-500 text-sm font-medium text-center hide"></div>
-                    <button type="submit" id="login-btn" class="w-full py-3.5 rounded-xl bg-primary-600 text-white font-bold shadow-lg shadow-primary-500/30 hover:bg-primary-700 transition-all transform hover:-translate-y-0.5">
+                    <div id="login-error" class="text-rose-400 text-sm font-medium text-center bg-rose-950/30 py-2 rounded-lg hide"></div>
+                    <button type="submit" id="login-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black text-lg shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
                         כניסה מאובטחת
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- Main Dashboard -->
         <div id="dashboard" class="hide pb-20">
-            <!-- Header -->
-            <header class="fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-gradient-to-br from-primary-600 to-primary-800 text-white p-2.5 rounded-xl shadow-lg shadow-primary-500/30">
-                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+            <header class="fixed top-0 left-0 right-0 z-40 glass border-b-0">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
+                    <div class="flex items-center gap-5">
+                        <div class="bg-gradient-to-br from-primary-500 to-primary-800 text-white p-3 rounded-2xl shadow-glow transform rotate-3 hover:rotate-0 transition-all">
+                            <i data-lucide="trending-up" class="w-7 h-7"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none">לוח פגישות אונליין</h1>
-                            <span class="text-xs text-slate-500 font-medium tracking-wide uppercase">סניף נשר</span>
+                            <h1 class="text-3xl font-black text-white tracking-tight leading-none">לוח פגישות אונליין</h1>
+                            <span class="text-xs text-primary-300 font-bold tracking-widest uppercase mt-1 block">סניף נשר</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                         <div class="hidden md:flex items-center bg-white rounded-full px-4 py-2 text-sm shadow-soft border border-slate-100">
-                            <i data-lucide="calendar" class="w-4 h-4 text-slate-400 ml-2"></i>
-                            <input type="date" id="filter-date-start" class="bg-transparent border-none outline-none text-slate-700 font-medium text-xs">
-                            <span class="mx-2 text-slate-300">→</span>
-                            <input type="date" id="filter-date-end" class="bg-transparent border-none outline-none text-slate-700 font-medium text-xs">
-                         </div>
-                         <button id="add-meeting-btn" class="bg-slate-900 text-white px-5 py-2.5 rounded-full hover:bg-slate-800 transition-all flex items-center gap-2 font-bold shadow-xl hover:-translate-y-0.5">
-                            <i data-lucide="plus" class="w-5 h-5"></i>
+                    <div class="flex items-center gap-4">
+                          <div class="hidden md:flex items-center glass-light rounded-full px-4 py-2.5 text-sm shadow-sm border-0">
+                            <i data-lucide="calendar-range" class="w-4 h-4 text-primary-300 ml-3"></i>
+                            <input type="date" id="filter-date-start" class="bg-transparent border-none outline-none text-slate-200 font-medium text-xs p-0 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                            <span class="mx-3 text-slate-500">→</span>
+                            <input type="date" id="filter-date-end" class="bg-transparent border-none outline-none text-slate-200 font-medium text-xs p-0 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                          </div>
+                          
+                          <button id="add-meeting-btn" class="bg-gradient-to-r from-primary-600 to-primary-800 text-white px-6 py-3 rounded-full hover:from-primary-500 hover:to-primary-700 transition-all flex items-center gap-3 font-bold shadow-glow hover:-translate-y-0.5">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i>
                             <span class="hidden sm:inline">פגישה חדשה</span>
                         </button>
-                         <button id="logout-btn" class="p-2.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors" title="התנתק">
-                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                          <button id="logout-btn" class="p-3 text-slate-400 hover:text-rose-400 glass-light rounded-full transition-all hover:bg-rose-950/30 border-0" title="התנתק">
+                            <i data-lucide="power" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
             </header>
 
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28 space-y-10">
-                <!-- Stats Grid -->
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 space-y-12">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="stats-container">
-                    <!-- Stats injected by JS -->
-                </div>
+                    </div>
 
-                <!-- Meeting List -->
                 <div class="space-y-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <i data-lucide="filter" class="w-5 h-5 text-primary-500"></i>
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <h2 class="text-2xl font-black text-white flex items-center gap-3">
+                            <div class="p-2 bg-primary-900/50 rounded-lg text-primary-400"><i data-lucide="list-filter" class="w-6 h-6"></i></div>
                             רשימת פגישות
                         </h2>
-                        <div class="relative w-64 group">
-                             <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                             <input type="text" id="search-input" placeholder="חיפוש..." class="w-full pr-4 pl-10 py-2.5 bg-white border border-slate-100 rounded-full shadow-soft focus:shadow-lg focus:ring-2 focus:ring-primary-100 outline-none text-sm transition-all">
+                        <div class="relative w-full md:w-72 group">
+                             <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-primary-400 transition-colors"></i>
+                             <input type="text" id="search-input" placeholder="חיפוש לקוח, טלפון או נציג..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full shadow-sm focus:shadow-glow focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
                         </div>
                     </div>
                     
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-right border-separate border-spacing-y-3">
-                            <thead class="text-slate-400 font-semibold text-xs uppercase tracking-wider hidden md:table-header-group">
+                    <div class="overflow-x-auto rounded-[2rem] glass border-0 p-2">
+                        <table class="w-full text-sm text-right border-separate border-spacing-y-2 px-2">
+                            <thead class="text-slate-400 font-bold text-xs uppercase tracking-wider hidden md:table-header-group">
                                 <tr>
-                                    <th class="px-6 pb-2">מועד</th>
-                                    <th class="px-6 pb-2">לקוח</th>
-                                    <th class="px-6 pb-2">סטטוס</th>
-                                    <th class="px-6 pb-2">נציג</th>
-                                    <th class="px-6 pb-2">מנוי</th>
-                                    <th class="px-6 pb-2">תזכורת</th>
-                                    <th class="px-6 pb-2"></th>
+                                    <th class="px-6 py-4">מועד</th>
+                                    <th class="px-6 py-4">לקוח</th>
+                                    <th class="px-6 py-4">סטטוס</th>
+                                    <th class="px-6 py-4">נציג</th>
+                                    <th class="px-6 py-4">מנוי</th>
+                                    <th class="px-6 py-4 text-center">תזכורת</th>
+                                    <th class="px-6 py-4"></th>
                                 </tr>
                             </thead>
                             <tbody id="meetings-table-body" class="space-y-4">
-                                <!-- Rows injected by JS -->
-                            </tbody>
+                                </tbody>
                         </table>
-                        <div id="loading-spinner" class="py-12 flex justify-center hide">
-                            <i data-lucide="loader-2" class="w-8 h-8 text-primary-500 animate-spin"></i>
-                        </div>
-                         <div id="empty-state" class="py-16 text-center hide">
-                            <div class="inline-flex p-4 bg-slate-50 rounded-full mb-3 text-slate-300">
-                                <i data-lucide="calendar-x" class="w-8 h-8"></i>
+                        
+                        <div id="loading-spinner" class="py-20 flex justify-center hide">
+                            <div class="relative">
+                                <div class="w-12 h-12 rounded-full border-4 border-primary-900/30 border-t-primary-500 animate-spin"></div>
+                                <div class="absolute inset-0 bg-primary-500/20 blur-xl rounded-full animate-pulse"></div>
                             </div>
-                            <p class="text-slate-400 font-medium">לא נמצאו פגישות</p>
+                        </div>
+                          <div id="empty-state" class="py-24 text-center hide">
+                            <div class="inline-flex p-6 glass-light rounded-full mb-6 text-primary-300 shadow-glow">
+                                <i data-lucide="calendar-x" class="w-12 h-12"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-white mb-2">אין פגישות בטווח הנבחר</h3>
+                            <p class="text-slate-400 font-medium">נסה לשנות את התאריכים או להוסיף פגישה חדשה</p>
                         </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <!-- Meeting Modal -->
-        <div id="meeting-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 hide">
-            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in">
-                <div class="flex justify-between items-center p-6 border-b border-slate-100 sticky top-0 bg-white z-10">
-                    <h2 id="modal-title" class="text-xl font-black text-slate-800">פגישה חדשה</h2>
-                    <button id="close-modal-btn" class="p-2 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <div id="meeting-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hide overflow-y-auto">
+             <div class="absolute inset-0 bg-dark-950/80 backdrop-blur-md transition-opacity"></div>
+            <div class="glass rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-glass w-full max-w-2xl animate-in relative z-10 border-0 my-auto max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center p-6 sm:p-8 border-b border-slate-800 sticky top-0 glass z-20 rounded-t-[2.5rem]">
+                    <div>
+                        <h2 id="modal-title" class="text-2xl font-black text-white">פגישה חדשה</h2>
+                         <p class="text-slate-400 text-sm mt-1">הזן את פרטי הפגישה</p>
+                    </div>
+                    <button id="close-modal-btn" class="p-3 rounded-full glass-light text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border-0"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
-                <form id="meeting-form" class="p-6 space-y-6">
+                <form id="meeting-form" class="p-6 sm:p-8 space-y-8">
                     <input type="hidden" id="meeting-id">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="col-span-2">
-                            <label class="text-xs font-bold text-slate-400 block mb-1">שם לקוח</label>
-                            <input type="text" id="m-clientName" required class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                            <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">שם הלקוח מלא</label>
+                            <input type="text" id="m-clientName" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600 font-medium">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">תאריך</label>
-                             <input type="date" id="m-date" required class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> תאריך</label>
+                             <input type="date" id="m-date" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">שעה</label>
-                             <input type="time" id="m-time" required class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> שעה</label>
+                             <input type="time" id="m-time" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">טלפון</label>
-                             <input type="tel" id="m-phone" required class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> טלפון</label>
+                             <input type="tel" id="m-phone" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">נציג</label>
-                             <input type="text" id="m-createdBy" required class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none transition-all">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="user-circle" class="w-4 h-4"></i> נציג מטפל</label>
+                             <input type="text" id="m-createdBy" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium">
                         </div>
                          <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">סוג לקוח</label>
-                             <select id="m-clientType" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl outline-none">
-                                 <option>מתעניין חדש</option>
-                                 <option>לקוח עבר</option>
-                             </select>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">סוג לקוח</label>
+                             <div class="relative">
+                                 <select id="m-clientType" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
+                                     <option class="bg-dark-900">מתעניין חדש</option>
+                                     <option class="bg-dark-900">לקוח עבר</option>
+                                 </select>
+                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
+                             </div>
                         </div>
-                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">סטטוס</label>
-                             <select id="m-status" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl outline-none">
-                                 <option>עדיין לא אישר הגעה</option>
-                                 <option>אישר הגעה</option>
-                                 <option>הגיע לפגישה</option>
-                                 <option>לא הגיע לפגישה</option>
-                             </select>
+                          <div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">סטטוס פגישה</label>
+                             <div class="relative">
+                                 <select id="m-status" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
+                                     <option class="bg-dark-900">עדיין לא אישר הגעה</option>
+                                     <option class="bg-dark-900">אישר הגעה</option>
+                                     <option class="bg-dark-900">הגיע לפגישה</option>
+                                     <option class="bg-dark-900">לא הגיע לפגישה</option>
+                                 </select>
+                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
+                             </div>
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-slate-400 block mb-1">נמכר מנוי?</label>
-                             <select id="m-subscriptionSold" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl outline-none">
-                                 <option>לא</option>
-                                 <option>כן</option>
-                             </select>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">האם נמכר מנוי?</label>
+                              <div class="relative">
+                                 <select id="m-subscriptionSold" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
+                                     <option class="bg-dark-900">לא</option>
+                                     <option class="bg-dark-900">כן</option>
+                                 </select>
+                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
+                             </div>
                         </div>
                         <div class="flex items-end">
-                            <label class="flex items-center gap-2 cursor-pointer bg-slate-50 p-3 rounded-xl w-full select-none">
-                                <input type="checkbox" id="m-reminderSent" class="w-5 h-5 text-primary-600 rounded">
-                                <span class="text-sm font-bold text-slate-600">בוצעה תזכורת?</span>
+                            <label class="flex items-center gap-4 cursor-pointer bg-dark-950/30 border border-slate-800/50 p-4 rounded-2xl w-full select-none hover:bg-dark-950/50 transition-colors group">
+                                <div class="relative">
+                                    <input type="checkbox" id="m-reminderSent" class="peer sr-only">
+                                    <div class="w-6 h-6 bg-dark-950 border-2 border-slate-600 rounded-md peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all flex items-center justify-center">
+                                        <i data-lucide="check" class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">בוצעה תזכורת ללקוח?</span>
                             </label>
                         </div>
                     </div>
                     <div>
-                         <label class="text-xs font-bold text-slate-400 block mb-1">הערות</label>
-                         <textarea id="m-notes" rows="3" class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-primary-200 outline-none resize-none"></textarea>
+                          <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> הערות נוספות</label>
+                          <textarea id="m-notes" rows="3" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 focus:shadow-glow outline-none resize-none text-white placeholder-slate-600 font-medium"></textarea>
                     </div>
-                    <div class="pt-4 flex justify-end gap-3">
-                         <button type="button" id="cancel-modal-btn" class="px-6 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 font-bold">ביטול</button>
-                         <button type="submit" class="px-6 py-2.5 rounded-xl bg-primary-600 text-white font-bold shadow-lg hover:bg-primary-700 transition-all flex items-center gap-2">
-                             <i data-lucide="save" class="w-4 h-4"></i> שמור
-                         </button>
+                    
+                    <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-4 border-t border-slate-800">
+                          <button type="button" id="cancel-modal-btn" class="px-8 py-4 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 font-bold transition-all">ביטול</button>
+                          <button type="submit" class="px-8 py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all flex items-center justify-center gap-3 text-lg hover:scale-[1.02] active:scale-[0.98]">
+                              <i data-lucide="save" class="w-6 h-6"></i> שמור פגישה
+                          </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Application Logic -->
     <script>
-        // --- CONFIGURATION ---
-        // In Vercel, these should be set in Project Settings.
-        // For local testing in this file, we use fallback values if process.env is missing.
+        // --- CONFIGURATION (השתמשנו במפתחות שזיהינו שעובדים) ---
         const SUPABASE_URL = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || 'https://qtwnkyeaecdumjkokdbk.supabase.co';
-       const SUPABASE_KEY = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0d25reWVhZWNkdW1qa29rZGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NTI0MzYsImV4cCI6MjA4MDQyODQzNn0.FVxRtqGnjLXMGvVDR9jF_1oYCXMNyjnmIaNtCFMPD2o';
+        const SUPABASE_KEY = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0d25reWVhZWNkdW1qa29rZGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NTI0MzYsImV4cCI6MjA4MDQyODQzNn0.FVxRtqGnjLXMGvVDR9jF_1oYCXMNyjnmIaNtCFMPD2o';
 
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // --- HELPER: Get Current Week (Sunday to Saturday) ---
+        // --- HELPER: Get Current Week ---
         function getCurrentWeek() {
             const today = new Date();
-            const day = today.getDay(); // 0 = Sunday, 1 = Monday...
-            
-            // Calculate Sunday (Start)
+            const day = today.getDay(); 
             const sunday = new Date(today);
             sunday.setDate(today.getDate() - day);
-            
-            // Calculate Saturday (End)
             const saturday = new Date(sunday);
-            saturday.setDate(sunday.getDate() + 6); // Add 6 days to Sunday
-            
-            return {
-                start: sunday.toISOString().split('T')[0],
-                end: saturday.toISOString().split('T')[0]
-            };
+            saturday.setDate(sunday.getDate() + 6); 
+            return { start: sunday.toISOString().split('T')[0], end: saturday.toISOString().split('T')[0] };
         }
-
         const currentWeek = getCurrentWeek();
 
         // --- STATE ---
         let state = {
-            user: null,
-            meetings: [],
-            filterStart: currentWeek.start, // מתחיל מיום ראשון האחרון
-            filterEnd: currentWeek.end,     // נגמר ביום שבת הקרוב
-            searchTerm: ''
+            user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: ''
         };
 
         // --- DOM ELEMENTS ---
         const els = {
-            authScreen: document.getElementById('auth-screen'),
-            dashboard: document.getElementById('dashboard'),
-            loginForm: document.getElementById('login-form'),
-            meetingModal: document.getElementById('meeting-modal'),
-            meetingForm: document.getElementById('meeting-form'),
-            tableBody: document.getElementById('meetings-table-body'),
-            spinner: document.getElementById('loading-spinner'),
-            emptyState: document.getElementById('empty-state'),
-            statsContainer: document.getElementById('stats-container'),
-            dateStart: document.getElementById('filter-date-start'),
-            dateEnd: document.getElementById('filter-date-end'),
-            searchInput: document.getElementById('search-input'),
+            authScreen: document.getElementById('auth-screen'), dashboard: document.getElementById('dashboard'),
+            loginForm: document.getElementById('login-form'), meetingModal: document.getElementById('meeting-modal'),
+            meetingForm: document.getElementById('meeting-form'), tableBody: document.getElementById('meetings-table-body'),
+            spinner: document.getElementById('loading-spinner'), emptyState: document.getElementById('empty-state'),
+            statsContainer: document.getElementById('stats-container'), dateStart: document.getElementById('filter-date-start'),
+            dateEnd: document.getElementById('filter-date-end'), searchInput: document.getElementById('search-input'),
             loginError: document.getElementById('login-error')
         };
 
         // --- INIT ---
         async function init() {
             lucide.createIcons();
-            
-            // Check Session
             const { data: { session } } = await sb.auth.getSession();
             state.user = session?.user || null;
-            
-            sb.auth.onAuthStateChange((_event, session) => {
-                state.user = session?.user || null;
-                renderView();
-            });
-
-            // Set Date Inputs
-            els.dateStart.value = state.filterStart;
-            els.dateEnd.value = state.filterEnd;
-
+            sb.auth.onAuthStateChange((_event, session) => { state.user = session?.user || null; renderView(); });
+            els.dateStart.value = state.filterStart; els.dateEnd.value = state.filterEnd;
             renderView();
         }
 
         // --- VIEW CONTROLLER ---
         function renderView() {
-            if (!state.user) {
-                els.authScreen.classList.remove('hide');
-                els.dashboard.classList.add('hide');
-            } else {
-                els.authScreen.classList.add('hide');
-                els.dashboard.classList.remove('hide');
-                fetchMeetings();
-            }
+            if (!state.user) { els.authScreen.classList.remove('hide'); els.dashboard.classList.add('hide'); }
+            else { els.authScreen.classList.add('hide'); els.dashboard.classList.remove('hide'); fetchMeetings(); }
         }
 
         // --- DATA ---
         async function fetchMeetings() {
-            els.tableBody.innerHTML = '';
-            els.spinner.classList.remove('hide');
-            els.emptyState.classList.add('hide');
-
-            const { data, error } = await sb
-                .from('meetings')
-                .select('*')
-                .gte('date', state.filterStart)
-                .lte('date', state.filterEnd)
-                .order('date', { ascending: true })
-                .order('time', { ascending: true });
-
+            els.tableBody.innerHTML = ''; els.spinner.classList.remove('hide'); els.emptyState.classList.add('hide');
+            const { data, error } = await sb.from('meetings').select('*').gte('date', state.filterStart).lte('date', state.filterEnd).order('date', { ascending: true }).order('time', { ascending: true });
             els.spinner.classList.add('hide');
-
-            if (error) {
-                console.error('Error:', error);
-                return;
-            }
-
-            state.meetings = data || [];
-            renderMeetings();
-            renderStats();
+            if (error) { console.error('Error:', error); return; }
+            state.meetings = data || []; renderMeetings(); renderStats();
         }
 
         async function saveMeeting(meeting) {
-            const isNew = !meeting.id;
-            const { error } = await sb.from('meetings').upsert(meeting);
-            
-            if (error) {
-                alert('שגיאה בשמירה: ' + error.message);
-                return;
-            }
+            // התיקון הקריטי לחני - וידוא שה-ID קיים
+            if (!state.user || !state.user.id) { alert('שגיאה: לא ניתן לזהות את המשתמש המחובר. נסה להתחבר מחדש.'); return; }
+            meeting.user_id = state.user.id; 
+            console.log('Saving meeting with Data:', meeting); // לוג לבדיקה
 
-            closeModal();
-            fetchMeetings();
+            const { error } = await sb.from('meetings').upsert(meeting);
+            if (error) { 
+                console.error('Save Error:', error);
+                alert('שגיאה בשמירה: ' + (error.message || error.details || 'אירעה תקלה')); 
+                return; 
+            }
+            closeModal(); fetchMeetings();
         }
 
         async function deleteMeeting(id) {
-            if(!confirm('האם למחוק פגישה זו?')) return;
-            
+            if(!confirm('האם למחוק פגישה זו לצמיתות?')) return;
             const { error } = await sb.from('meetings').delete().eq('id', id);
-            if (error) alert(error.message);
-            else fetchMeetings();
+            if (error) alert(error.message); else fetchMeetings();
         }
 
-        // --- RENDERERS ---
+        // --- RENDERERS (עיצוב חדש לטבלה ולכרטיסיות) ---
         function renderMeetings() {
-            const filtered = state.meetings.filter(m => 
-                m.client_name.includes(state.searchTerm) || 
-                (m.phone && m.phone.includes(state.searchTerm)) ||
-                m.created_by.includes(state.searchTerm)
-            );
-
+            const filtered = state.meetings.filter(m => m.client_name.includes(state.searchTerm) || (m.phone && m.phone.includes(state.searchTerm)) || m.created_by.includes(state.searchTerm));
             els.tableBody.innerHTML = '';
-
-            if (filtered.length === 0) {
-                els.emptyState.classList.remove('hide');
-                return;
-            } else {
-                els.emptyState.classList.add('hide');
-            }
+            if (filtered.length === 0) { els.emptyState.classList.remove('hide'); return; } else { els.emptyState.classList.add('hide'); }
 
             filtered.forEach(m => {
                 const tr = document.createElement('tr');
-                tr.className = 'bg-white hover:bg-primary-50/30 shadow-soft hover:shadow-lg transition-all duration-300 rounded-2xl group';
+                // שורת טבלה בעיצוב גלאס כהה
+                tr.className = 'glass-light hover:bg-slate-800/50 transition-all duration-300 rounded-[1.5rem] group mb-3 md:mb-0 block md:table-row mobile-card';
                 
-                // Status Badge Logic
-                let badgeClass = 'bg-amber-50 text-amber-700 border-amber-100';
-                if(m.status === 'אישר הגעה') badgeClass = 'bg-blue-50 text-blue-700 border-blue-100';
-                if(m.status === 'הגיע לפגישה') badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-                if(m.status === 'לא הגיע לפגישה') badgeClass = 'bg-rose-50 text-rose-700 border-rose-100';
+                let badgeClass = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_10px_rgba(251,191,36,0.2)]';
+                if(m.status === 'אישר הגעה') badgeClass = 'bg-blue-950/50 text-blue-300 border-blue-800/50 shadow-[0_0_10px_rgba(96,165,250,0.2)]';
+                if(m.status === 'הגיע לפגישה') badgeClass = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_10px_rgba(52,211,153,0.2)]';
+                if(m.status === 'לא הגיע לפגישה') badgeClass = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_10px_rgba(251,113,133,0.2)]';
 
                 tr.innerHTML = `
-                    <td class="hidden md:table-cell px-6 py-5 first:rounded-r-2xl border-y border-r border-slate-50">
+                    <td class="hidden md:table-cell px-6 py-5 first:rounded-r-[1.5rem] border-y border-r border-transparent">
                         <div class="flex flex-col">
-                            <span class="font-bold text-slate-800 text-lg">${m.time.slice(0,5)}</span>
-                            <span class="text-slate-400 text-xs font-medium bg-slate-100 px-2 py-0.5 rounded-md w-fit mt-1">${m.date}</span>
+                            <span class="font-black text-white text-lg flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-primary-400"></i> ${m.time.slice(0,5)}</span>
+                            <span class="text-primary-300 text-xs font-bold uppercase tracking-wider mt-1 bg-primary-950/50 px-2 py-1 rounded-md w-fit">${m.date}</span>
                         </div>
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-slate-50">
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         <div class="flex flex-col">
-                            <span class="font-bold text-slate-800">${m.client_name}</span>
-                            <span class="text-xs text-slate-500 mt-0.5">${m.client_type || '-'}</span>
+                            <span class="font-bold text-white text-base">${m.client_name}</span>
+                            <span class="text-xs text-slate-400 mt-1 flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${m.client_type || '-'}</span>
                         </div>
                     </td>
-                     <td class="hidden md:table-cell px-6 py-5 border-y border-slate-50">
-                        <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-1.5">
-                           <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                      <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
+                        <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-2 backdrop-blur-md">
+                           <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                            </span>
                            ${m.status}
                         </span>
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-slate-50">
-                        <span class="text-slate-700 font-medium">${m.created_by}</span>
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
+                        <span class="text-slate-200 font-medium flex items-center gap-2"><i data-lucide="shield-user" class="w-4 h-4 text-slate-500"></i> ${m.created_by}</span>
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-slate-50">
-                        ${m.subscription_sold === 'כן' ? '<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg text-xs">נמכר!</span>' : '<span class="text-slate-300">-</span>'}
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
+                        ${m.subscription_sold === 'כן' ? '<span class="text-emerald-300 font-bold bg-emerald-950/50 border border-emerald-800/50 px-3 py-1 rounded-lg text-xs shadow-[0_0_10px_rgba(52,211,153,0.2)] flex items-center gap-1 w-fit"><i data-lucide="check-circle-2" class="w-3 h-3"></i> נמכר!</span>' : '<span class="text-slate-600 text-xl font-thin">-</span>'}
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-slate-50 text-center">
-                        ${m.reminder_sent ? '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-500 mx-auto"></i>' : '<i data-lucide="x-circle" class="w-5 h-5 text-slate-200 mx-auto"></i>'}
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent text-center">
+                        ${m.reminder_sent ? '<div class="bg-emerald-950/30 p-2 rounded-full inline-flex shadow-[0_0_10px_rgba(52,211,153,0.1)]"><i data-lucide="check" class="w-5 h-5 text-emerald-400"></i></div>' : '<div class="bg-slate-800/50 p-2 rounded-full inline-flex"><i data-lucide="x" class="w-5 h-5 text-slate-600"></i></div>'}
                     </td>
-                    <td class="px-6 py-5 last:rounded-l-2xl border-y border-l border-slate-50 text-left">
-                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button class="edit-btn p-2 text-primary-600 hover:bg-primary-50 rounded-xl"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button class="del-btn p-2 text-rose-500 hover:bg-rose-50 rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <td class="px-6 py-5 last:rounded-l-[1.5rem] border-y border-l border-transparent text-left">
+                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all md:flex">
+                            <button class="edit-btn p-2.5 text-primary-300 hover:text-white hover:bg-primary-900/50 rounded-xl transition-colors"><i data-lucide="pencil" class="w-5 h-5"></i></button>
+                            <button class="del-btn p-2.5 text-rose-400 hover:text-white hover:bg-rose-950/50 rounded-xl transition-colors"><i data-lucide="trash" class="w-5 h-5"></i></button>
                         </div>
-                         <!-- Mobile Only Layout (Hidden on Desktop) -->
-                         <div class="md:hidden">
-                            <h3 class="font-bold">${m.client_name}</h3>
-                            <p class="text-xs">${m.date} | ${m.time.slice(0,5)}</p>
+                         <div class="md:hidden flex justify-between items-center">
+                           <div>
+                                <h3 class="font-black text-white text-lg mb-1">${m.client_name}</h3>
+                                <p class="text-sm text-primary-300 font-medium flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4"></i> ${m.date} | ${m.time.slice(0,5)}</p>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                     <span class="px-2 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">${m.status}</span>
+                                     ${m.subscription_sold === 'כן' ? '<span class="text-emerald-300 font-bold bg-emerald-950/30 border border-emerald-800/30 px-2 py-1 rounded-full text-[10px]">מנוי נמכר</span>' : ''}
+                                </div>
+                           </div>
                          </div>
                     </td>
                 `;
-                
-                // Attach Events
                 tr.querySelector('.edit-btn').onclick = () => openModal(m);
                 tr.querySelector('.del-btn').onclick = () => deleteMeeting(m.id);
-                // Mobile Click
                 if(window.innerWidth < 768) tr.onclick = (e) => { if(!e.target.closest('button')) openModal(m); };
-
                 els.tableBody.appendChild(tr);
             });
             lucide.createIcons();
@@ -466,55 +449,51 @@
             const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
             const pending = state.meetings.filter(m => m.status === 'עדיין לא אישר הגעה').length;
 
+            // כרטיסיות סטטיסטיקה בעיצוב חדשני
             const cards = [
-                { title: 'סה״כ פגישות', val: total, icon: 'calendar', color: 'text-blue-600', bg: 'bg-blue-50' },
-                { title: 'ממתינים', val: pending, icon: 'clock', color: 'text-amber-500', bg: 'bg-amber-50' },
-                { title: 'הגיעו', val: attended, icon: 'users', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-                { title: 'מכירות', val: sold, icon: 'dollar-sign', color: 'text-primary-600', bg: 'bg-primary-50' }
+                { title: 'סה״כ פגישות', val: total, icon: 'layers', color: 'text-blue-400', bg: 'bg-blue-950/30', border: 'border-blue-800/30', shadow: 'shadow-[0_0_20px_rgba(96,165,250,0.15)]', gradient: 'from-blue-600 to-blue-900' },
+                { title: 'ממתינים לאישור', val: pending, icon: 'hourglass', color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/30', shadow: 'shadow-[0_0_20px_rgba(251,191,36,0.15)]', gradient: 'from-amber-600 to-amber-900' },
+                { title: 'הגיעו בפועל', val: attended, icon: 'users-check', color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/30', shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.15)]', gradient: 'from-emerald-600 to-emerald-900' },
+                { title: 'מנויים שנמכרו', val: sold, icon: 'gem', color: 'text-primary-400', bg: 'bg-primary-950/30', border: 'border-primary-800/30', shadow: 'shadow-glow', gradient: 'from-primary-600 to-primary-900' }
             ];
 
             els.statsContainer.innerHTML = cards.map(c => `
-                <div class="bg-white rounded-2xl shadow-soft p-6 border border-slate-50 flex items-start justify-between transition-all hover:-translate-y-1 hover:shadow-xl group">
-                    <div>
-                        <p class="text-slate-500 text-sm font-medium mb-2 tracking-wide">${c.title}</p>
-                        <h3 class="text-4xl font-extrabold text-slate-800 tracking-tight">${c.val}</h3>
-                    </div>
-                    <div class="p-4 rounded-2xl ${c.bg}">
-                        <i data-lucide="${c.icon}" class="w-7 h-7 ${c.color}"></i>
+                <div class="glass rounded-[2rem] p-1.5 ${c.shadow} hover:-translate-y-1 transition-all duration-300 group">
+                    <div class="bg-dark-950/40 rounded-[1.7rem] p-6 h-full border border-transparent group-hover:${c.border} transition-colors relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br ${c.gradient} opacity-5 group-hover:opacity-10 transition-opacity"></div>
+                        <div class="relative z-10 flex items-start justify-between">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i> ${c.title}
+                                </p>
+                                <h3 class="text-5xl font-black text-white tracking-tight">${c.val}</h3>
+                            </div>
+                            <div class="p-4 rounded-2xl ${c.bg} ${c.border} border shadow-sm group-hover:scale-110 transition-transform">
+                                <i data-lucide="${c.icon}" class="w-8 h-8 ${c.color}"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `).join('');
             lucide.createIcons();
         }
 
-        // --- AUTH HANDLERS ---
+        // --- HANDLERS (לוגיקה זהה, רק הוספנו לוגים לבדיקה של חני) ---
         els.loginForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             els.loginError.classList.add('hide');
-            
-            const btn = document.getElementById('login-btn');
-            const originalText = btn.innerText;
-            btn.innerText = 'מתחבר...';
-            
+            const btn = document.getElementById('login-btn'); const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i>'; lucide.createIcons();
             const { error } = await sb.auth.signInWithPassword({ email, password });
-            
-            if (error) {
-                els.loginError.textContent = 'שגיאה בהתחברות: ' + error.message;
-                els.loginError.classList.remove('hide');
-                btn.innerText = originalText;
-            }
+            if (error) { els.loginError.textContent = 'שגיאה בהתחברות: ' + error.message; els.loginError.classList.remove('hide'); btn.innerHTML = originalText; }
         };
-
         document.getElementById('logout-btn').onclick = () => sb.auth.signOut();
 
-        // --- MODAL HANDLERS ---
         function openModal(meeting = null) {
-            els.meetingModal.classList.remove('hide');
-            const f = els.meetingForm;
-            f.reset();
-            
+            els.meetingModal.classList.remove('hide'); document.body.style.overflow = 'hidden'; // מניעת גלילה ברקע
+            els.meetingForm.reset();
             if (meeting) {
                 document.getElementById('modal-title').textContent = 'עריכת פגישה';
                 document.getElementById('meeting-id').value = meeting.id;
@@ -535,20 +514,16 @@
                 document.getElementById('m-time').value = '10:00';
             }
         }
-
-        function closeModal() {
-            els.meetingModal.classList.add('hide');
-        }
-
+        function closeModal() { els.meetingModal.classList.add('hide'); document.body.style.overflow = ''; }
         document.getElementById('add-meeting-btn').onclick = () => openModal();
         document.getElementById('close-modal-btn').onclick = closeModal;
         document.getElementById('cancel-modal-btn').onclick = closeModal;
         
-     els.meetingForm.onsubmit = (e) => {
+        els.meetingForm.onsubmit = (e) => {
             e.preventDefault();
             const id = document.getElementById('meeting-id').value;
+            // התיקון של ה-ID מוטמע גם כאן
             const meeting = {
-                user_id: state.user.id, // <--- הנה השורה החסרה שהוספנו!
                 client_name: document.getElementById('m-clientName').value,
                 date: document.getElementById('m-date').value,
                 time: document.getElementById('m-time').value,
@@ -560,21 +535,14 @@
                 reminder_sent: document.getElementById('m-reminderSent').checked,
                 notes: document.getElementById('m-notes').value
             };
-            
             if(id) meeting.id = id;
             saveMeeting(meeting);
         };
-        // --- FILTERS ---
+
         els.dateStart.onchange = (e) => { state.filterStart = e.target.value; fetchMeetings(); };
         els.dateEnd.onchange = (e) => { state.filterEnd = e.target.value; fetchMeetings(); };
         els.searchInput.oninput = (e) => { state.searchTerm = e.target.value; renderMeetings(); };
-
-        // Start
         init();
     </script>
 </body>
 </html>
-
-
-
-
