@@ -12,6 +12,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
@@ -306,7 +307,7 @@
             state.meetings = data || []; 
             renderMeetings(); 
             renderStats();
-            renderChart(); // קריאה לפונקציית הגרף החדשה
+            renderChart();
         }
 
         async function saveMeeting(meeting) {
@@ -323,40 +324,35 @@
             if (error) alert(error.message); else fetchMeetings();
         }
 
-      // --- CHART LOGIC (מתוקן: יום ראשון מימין) ---
+        // --- CHART LOGIC (מתוקן + תגיות מספרים) ---
         function renderChart() {
             const ctx = document.getElementById('meetingsChart').getContext('2d');
-            
-            // 1. יצירת מילון תאריכים
             const dateMap = {};
             let curr = new Date(state.filterStart);
             const end = new Date(state.filterEnd);
-            
             while(curr <= end) {
                 const dateStr = curr.toISOString().split('T')[0];
                 dateMap[dateStr] = 0;
                 curr.setDate(curr.getDate() + 1);
             }
-
-            // 2. מילוי נתונים
             state.meetings.forEach(m => {
                 if (dateMap[m.date] !== undefined) dateMap[m.date]++;
             });
 
-            // 3. יצירת התוויות והנתונים (הוספנו reverse כדי שיום א' יהיה מימין)
             const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-            
             const labels = Object.keys(dateMap).map(dateStr => {
                 const d = new Date(dateStr);
                 const dayName = daysHebrew[d.getDay()];
                 const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
                 return `${dayName} ${shortDate}`;
-            }).reverse(); // <--- התיקון כאן: הופך את סדר הימים
+            }).reverse(); // היפוך סדר לימין-שמאל
 
-            const dataValues = Object.values(dateMap).reverse(); // <--- התיקון כאן: הופך את סדר הנתונים בהתאמה
+            const dataValues = Object.values(dateMap).reverse(); // היפוך נתונים בהתאמה
 
-            // 4. בניית הגרף
             if (state.chart) state.chart.destroy();
+
+            // הפעלת התוסף של התגיות
+            Chart.register(ChartDataLabels);
 
             state.chart = new Chart(ctx, {
                 type: 'bar',
@@ -377,89 +373,27 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
+                        // הגדרת תגיות המספרים על הגרף
+                        datalabels: {
+                            color: '#ffffff',
+                            anchor: 'end',
+                            align: 'start',
+                            offset: -4,
+                            font: { family: 'Heebo', weight: '900', size: 14 },
+                            formatter: (value) => { return value > 0 ? value : ''; } // הסתרת אפסים
+                        },
                         tooltip: { 
-                            backgroundColor: 'rgba(30, 30, 46, 0.9)', 
-                            titleColor: '#fff', 
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(132, 77, 255, 0.3)',
-                            borderWidth: 1,
-                            padding: 10,
-                            // יישור טקסט בתוך הבועה לימין
-                            rtl: true,
-                            textDirection: 'rtl' 
+                            backgroundColor: 'rgba(30, 30, 46, 0.9)', titleColor: '#fff', bodyColor: '#fff',
+                            borderColor: 'rgba(132, 77, 255, 0.3)', borderWidth: 1, padding: 10, rtl: true, textDirection: 'rtl' 
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1, color: '#94a3b8' },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            position: 'right' // מעביר את המספרים (0,1,2...) לצד ימין
+                            beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, position: 'right'
                         },
                         x: {
-                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } },
-                            grid: { display: false }
-                        }
-                    }
-                }
-            });
-        }
-
-            // 2. מילוי הכמויות
-            state.meetings.forEach(m => {
-                if (dateMap[m.date] !== undefined) dateMap[m.date]++;
-            });
-
-            // 3. פרמוט התוויות לגרף (יום עברי + תאריך מקוצר)
-            const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
-            const labels = Object.keys(dateMap).map(dateStr => {
-                const d = new Date(dateStr);
-                const dayName = daysHebrew[d.getDay()];
-                const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
-                return `${dayName} ${shortDate}`;
-            });
-            const dataValues = Object.values(dateMap);
-
-            // 4. בניית הגרף (או עדכון אם קיים)
-            if (state.chart) state.chart.destroy();
-
-            state.chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'כמות פגישות',
-                        data: dataValues,
-                        backgroundColor: '#844dff',
-                        hoverBackgroundColor: '#a17aff',
-                        borderRadius: 8,
-                        barThickness: 'flex',
-                        maxBarThickness: 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { 
-                            backgroundColor: 'rgba(30, 30, 46, 0.9)', 
-                            titleColor: '#fff', 
-                            bodyColor: '#fff',
-                            borderColor: 'rgba(132, 77, 255, 0.3)',
-                            borderWidth: 1,
-                            padding: 10
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1, color: '#94a3b8' },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-                        },
-                        x: {
-                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } },
-                            grid: { display: false }
+                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } }, grid: { display: false }
                         }
                     }
                 }
@@ -622,4 +556,3 @@
     </script>
 </body>
 </html>
-
