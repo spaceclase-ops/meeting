@@ -323,11 +323,11 @@
             if (error) alert(error.message); else fetchMeetings();
         }
 
-        // --- CHART LOGIC (הלוגיקה החדשה של הגרף) ---
+      // --- CHART LOGIC (מתוקן: יום ראשון מימין) ---
         function renderChart() {
             const ctx = document.getElementById('meetingsChart').getContext('2d');
             
-            // 1. יצירת מילון של כל התאריכים בטווח (כולל ימים ללא פגישות)
+            // 1. יצירת מילון תאריכים
             const dateMap = {};
             let curr = new Date(state.filterStart);
             const end = new Date(state.filterEnd);
@@ -337,6 +337,73 @@
                 dateMap[dateStr] = 0;
                 curr.setDate(curr.getDate() + 1);
             }
+
+            // 2. מילוי נתונים
+            state.meetings.forEach(m => {
+                if (dateMap[m.date] !== undefined) dateMap[m.date]++;
+            });
+
+            // 3. יצירת התוויות והנתונים (הוספנו reverse כדי שיום א' יהיה מימין)
+            const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+            
+            const labels = Object.keys(dateMap).map(dateStr => {
+                const d = new Date(dateStr);
+                const dayName = daysHebrew[d.getDay()];
+                const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
+                return `${dayName} ${shortDate}`;
+            }).reverse(); // <--- התיקון כאן: הופך את סדר הימים
+
+            const dataValues = Object.values(dateMap).reverse(); // <--- התיקון כאן: הופך את סדר הנתונים בהתאמה
+
+            // 4. בניית הגרף
+            if (state.chart) state.chart.destroy();
+
+            state.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'כמות פגישות',
+                        data: dataValues,
+                        backgroundColor: '#844dff',
+                        hoverBackgroundColor: '#a17aff',
+                        borderRadius: 8,
+                        barThickness: 'flex',
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            backgroundColor: 'rgba(30, 30, 46, 0.9)', 
+                            titleColor: '#fff', 
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(132, 77, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 10,
+                            // יישור טקסט בתוך הבועה לימין
+                            rtl: true,
+                            textDirection: 'rtl' 
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            position: 'right' // מעביר את המספרים (0,1,2...) לצד ימין
+                        },
+                        x: {
+                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
 
             // 2. מילוי הכמויות
             state.meetings.forEach(m => {
@@ -555,3 +622,4 @@
     </script>
 </body>
 </html>
+
