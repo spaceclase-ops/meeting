@@ -11,6 +11,8 @@
     
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <script>
@@ -20,24 +22,21 @@
           extend: {
             fontFamily: { sans: ['Heebo', 'sans-serif'] },
             colors: {
-              // פלטת צבעים חדשה ויוקרתית (סגול עתידני)
               primary: { 50: '#f3f1ff', 100: '#ebe5ff', 200: '#d9cfff', 300: '#bea6ff', 400: '#a17aff', 500: '#844dff', 600: '#793af2', 700: '#6b2bd9', 800: '#5a24b3', 900: '#4b1e95', 950: '#2c0f5e' },
-              dark: { 800: '#1e1e2e', 900: '#11111b', 950: '#0a0a0f' } // רקעים כהים עמוקים
+              dark: { 800: '#1e1e2e', 900: '#11111b', 950: '#0a0a0f' }
             },
             boxShadow: {
               'glow': '0 0 20px rgba(132, 77, 255, 0.4)',
               'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.3)',
             },
             backgroundImage: {
-                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                'cyber-grid': 'linear-gradient(rgba(132, 77, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(132, 77, 255, 0.1) 1px, transparent 1px)'
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))'
             }
           },
         },
       }
     </script>
     <style>
-        /* רקע כללי כהה עם טקסטורת רשת עדינה */
         body { 
             background-color: #0a0a0f; 
             background-image: 
@@ -47,31 +46,22 @@
             background-size: 100% 100%, 20px 20px, 20px 20px;
             color: #e2e8f0;
         }
-        
-        /* אפקט זכוכית */
         .glass { 
             background: rgba(30, 30, 46, 0.70); 
             backdrop-filter: blur(12px); 
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
         }
-        
         .glass-light {
              background: rgba(255, 255, 255, 0.05);
              border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        /* סרגל גלילה מותאם */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0a0a0f; }
         ::-webkit-scrollbar-thumb { background: #4b1e95; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b2bd9; }
-
         .hide { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        
-        /* תיקון לטבלאות במובייל */
         @media (max-width: 768px) {
             .mobile-card { @apply glass p-4 rounded-2xl mb-4 border-0; }
         }
@@ -81,7 +71,6 @@
     <div id="app" class="min-h-screen relative overflow-hidden">
         <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 hide">
             <div class="absolute inset-0 bg-gradient-radial from-primary-900/20 to-transparent opacity-40"></div>
-            
             <div class="glass p-8 sm:p-10 rounded-[2rem] shadow-glass w-full max-w-md animate-in relative z-10">
                 <div class="text-center mb-10">
                     <div class="inline-flex p-4 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white mb-6 shadow-glow">
@@ -92,21 +81,13 @@
                 </div>
                 <form id="login-form" class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-primary-300 mb-2 uppercase tracking-wider">אימייל</label>
-                        <div class="relative">
-                            <i data-lucide="mail" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
-                            <input type="email" id="email" required class="w-full pr-12 pl-4 py-3.5 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600" placeholder="שם משתמש">
-                        </div>
+                        <input type="email" id="email" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 outline-none transition-all text-white placeholder-slate-600" placeholder="אימייל">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-primary-300 mb-2 uppercase tracking-wider">סיסמה</label>
-                        <div class="relative">
-                             <i data-lucide="lock" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
-                            <input type="password" id="password" required class="w-full pr-12 pl-4 py-3.5 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600" placeholder="••••••••">
-                        </div>
+                        <input type="password" id="password" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-xl focus:border-primary-500 outline-none transition-all text-white placeholder-slate-600" placeholder="סיסמה">
                     </div>
-                    <div id="login-error" class="text-rose-400 text-sm font-medium text-center bg-rose-950/30 py-2 rounded-lg hide"></div>
-                    <button type="submit" id="login-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black text-lg shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                    <div id="login-error" class="text-rose-400 text-sm font-medium text-center hide"></div>
+                    <button type="submit" id="login-btn" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black text-lg shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all">
                         כניסה מאובטחת
                     </button>
                 </form>
@@ -117,47 +98,55 @@
             <header class="fixed top-0 left-0 right-0 z-40 glass border-b-0">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-24 flex items-center justify-between">
                     <div class="flex items-center gap-5">
-                        <div class="bg-gradient-to-br from-primary-500 to-primary-800 text-white p-3 rounded-2xl shadow-glow transform rotate-3 hover:rotate-0 transition-all">
+                        <div class="bg-gradient-to-br from-primary-500 to-primary-800 text-white p-3 rounded-2xl shadow-glow">
                             <i data-lucide="trending-up" class="w-7 h-7"></i>
                         </div>
                         <div>
-                            <h1 class="text-3xl font-black text-white tracking-tight leading-none">לוח פגישות אונליין</h1>
+                            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-none">לוח פגישות אונליין</h1>
                             <span class="text-xs text-primary-300 font-bold tracking-widest uppercase mt-1 block">סניף נשר</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                          <div class="hidden md:flex items-center glass-light rounded-full px-4 py-2.5 text-sm shadow-sm border-0">
-                            <i data-lucide="calendar-range" class="w-4 h-4 text-primary-300 ml-3"></i>
-                            <input type="date" id="filter-date-start" class="bg-transparent border-none outline-none text-slate-200 font-medium text-xs p-0 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
-                            <span class="mx-3 text-slate-500">→</span>
-                            <input type="date" id="filter-date-end" class="bg-transparent border-none outline-none text-slate-200 font-medium text-xs p-0 [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
-                          </div>
-                          
-                          <button id="add-meeting-btn" class="bg-gradient-to-r from-primary-600 to-primary-800 text-white px-6 py-3 rounded-full hover:from-primary-500 hover:to-primary-700 transition-all flex items-center gap-3 font-bold shadow-glow hover:-translate-y-0.5">
+                          <button id="add-meeting-btn" class="bg-gradient-to-r from-primary-600 to-primary-800 text-white px-4 sm:px-6 py-3 rounded-full hover:from-primary-500 hover:to-primary-700 transition-all flex items-center gap-3 font-bold shadow-glow">
                             <i data-lucide="plus-circle" class="w-5 h-5"></i>
                             <span class="hidden sm:inline">פגישה חדשה</span>
                         </button>
-                          <button id="logout-btn" class="p-3 text-slate-400 hover:text-rose-400 glass-light rounded-full transition-all hover:bg-rose-950/30 border-0" title="התנתק">
+                          <button id="logout-btn" class="p-3 text-slate-400 hover:text-rose-400 glass-light rounded-full transition-all border-0">
                             <i data-lucide="power" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
             </header>
 
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 space-y-12">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="stats-container">
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-32 space-y-8">
+                
+                <div class="glass p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-white font-bold flex items-center gap-2">
+                        <i data-lucide="calendar-range" class="w-5 h-5 text-primary-400"></i> טווח תצוגה:
                     </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <input type="date" id="filter-date-start" class="bg-dark-950/50 border border-slate-700 rounded-lg text-white px-3 py-2 w-full sm:w-auto [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                        <span class="text-slate-500">→</span>
+                        <input type="date" id="filter-date-end" class="bg-dark-950/50 border border-slate-700 rounded-lg text-white px-3 py-2 w-full sm:w-auto [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="stats-container"></div>
+
+                <div class="glass p-6 rounded-[2rem] shadow-glow relative overflow-hidden">
+                    <h3 class="text-white font-bold text-lg mb-6 flex items-center gap-2 z-10 relative">
+                        <i data-lucide="bar-chart-3" class="text-primary-400"></i> עומס פגישות שבועי
+                    </h3>
+                    <div class="relative w-full h-64 sm:h-80 z-10">
+                        <canvas id="meetingsChart"></canvas>
+                    </div>
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 blur-[100px] rounded-full pointer-events-none"></div>
+                </div>
 
                 <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                        <h2 class="text-2xl font-black text-white flex items-center gap-3">
-                            <div class="p-2 bg-primary-900/50 rounded-lg text-primary-400"><i data-lucide="list-filter" class="w-6 h-6"></i></div>
-                            רשימת פגישות
-                        </h2>
-                        <div class="relative w-full md:w-72 group">
-                             <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-primary-400 transition-colors"></i>
-                             <input type="text" id="search-input" placeholder="חיפוש לקוח, טלפון או נציג..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full shadow-sm focus:shadow-glow focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
-                        </div>
+                    <div class="relative w-full md:w-72 group">
+                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                         <input type="text" id="search-input" placeholder="חיפוש..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
                     </div>
                     
                     <div class="overflow-x-auto rounded-[2rem] glass border-0 p-2">
@@ -173,116 +162,88 @@
                                     <th class="px-6 py-4"></th>
                                 </tr>
                             </thead>
-                            <tbody id="meetings-table-body" class="space-y-4">
-                                </tbody>
+                            <tbody id="meetings-table-body" class="space-y-4"></tbody>
                         </table>
                         
                         <div id="loading-spinner" class="py-20 flex justify-center hide">
-                            <div class="relative">
-                                <div class="w-12 h-12 rounded-full border-4 border-primary-900/30 border-t-primary-500 animate-spin"></div>
-                                <div class="absolute inset-0 bg-primary-500/20 blur-xl rounded-full animate-pulse"></div>
-                            </div>
+                            <div class="w-12 h-12 rounded-full border-4 border-primary-900/30 border-t-primary-500 animate-spin"></div>
                         </div>
                           <div id="empty-state" class="py-24 text-center hide">
-                            <div class="inline-flex p-6 glass-light rounded-full mb-6 text-primary-300 shadow-glow">
-                                <i data-lucide="calendar-x" class="w-12 h-12"></i>
-                            </div>
-                            <h3 class="text-xl font-bold text-white mb-2">אין פגישות בטווח הנבחר</h3>
-                            <p class="text-slate-400 font-medium">נסה לשנות את התאריכים או להוסיף פגישה חדשה</p>
+                            <i data-lucide="calendar-off" class="w-12 h-12 text-slate-600 mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">אין פגישות להצגה</h3>
                         </div>
                     </div>
                 </div>
             </main>
         </div>
 
-        <div id="meeting-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hide overflow-y-auto">
+        <div id="meeting-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hide">
              <div class="absolute inset-0 bg-dark-950/80 backdrop-blur-md transition-opacity"></div>
             <div class="glass rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-glass w-full max-w-2xl animate-in relative z-10 border-0 my-auto max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center p-6 sm:p-8 border-b border-slate-800 sticky top-0 glass z-20 rounded-t-[2.5rem]">
-                    <div>
-                        <h2 id="modal-title" class="text-2xl font-black text-white">פגישה חדשה</h2>
-                         <p class="text-slate-400 text-sm mt-1">הזן את פרטי הפגישה</p>
-                    </div>
-                    <button id="close-modal-btn" class="p-3 rounded-full glass-light text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border-0"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="flex justify-between items-center p-6 border-b border-slate-800 sticky top-0 glass z-20">
+                    <h2 id="modal-title" class="text-2xl font-black text-white">פגישה חדשה</h2>
+                    <button id="close-modal-btn" class="p-2 rounded-full glass-light text-slate-400 hover:text-white border-0"><i data-lucide="x" class="w-6 h-6"></i></button>
                 </div>
-                <form id="meeting-form" class="p-6 sm:p-8 space-y-8">
+                <form id="meeting-form" class="p-6 space-y-6">
                     <input type="hidden" id="meeting-id">
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="col-span-2">
-                            <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">שם הלקוח מלא</label>
-                            <input type="text" id="m-clientName" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 focus:shadow-glow outline-none transition-all text-white placeholder-slate-600 font-medium">
+                            <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">שם הלקוח</label>
+                            <input type="text" id="m-clientName" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i> תאריך</label>
-                             <input type="date" id="m-date" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">תאריך</label>
+                             <input type="date" id="m-date" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> שעה</label>
-                             <input type="time" id="m-time" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">שעה</label>
+                             <input type="time" id="m-time" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white [&::-webkit-calendar-picker-indicator]:filter [&::-webkit-calendar-picker-indicator]:invert">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> טלפון</label>
-                             <input type="tel" id="m-phone" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium">
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">טלפון</label>
+                             <input type="tel" id="m-phone" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="user-circle" class="w-4 h-4"></i> נציג מטפל</label>
-                             <input type="text" id="m-createdBy" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium">
-                        </div>
-                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">סוג לקוח</label>
-                             <div class="relative">
-                                 <select id="m-clientType" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
-                                     <option class="bg-dark-900">מתעניין חדש</option>
-                                     <option class="bg-dark-900">לקוח עבר</option>
-                                 </select>
-                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
-                             </div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">נציג מטפל</label>
+                             <input type="text" id="m-createdBy" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
                         </div>
                           <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">סטטוס פגישה</label>
-                             <div class="relative">
-                                 <select id="m-status" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
-                                     <option class="bg-dark-900">עדיין לא אישר הגעה</option>
-                                     <option class="bg-dark-900">אישר הגעה</option>
-                                     <option class="bg-dark-900">הגיע לפגישה</option>
-                                     <option class="bg-dark-900">לא הגיע לפגישה</option>
-                                 </select>
-                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
-                             </div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">סוג לקוח</label>
+                             <select id="m-clientType" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                                 <option class="bg-dark-900">מתעניין חדש</option>
+                                 <option class="bg-dark-900">לקוח עבר</option>
+                             </select>
+                        </div>
+                          <div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">סטטוס</label>
+                             <select id="m-status" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                                 <option class="bg-dark-900">עדיין לא אישר הגעה</option>
+                                 <option class="bg-dark-900">אישר הגעה</option>
+                                 <option class="bg-dark-900">הגיע לפגישה</option>
+                                 <option class="bg-dark-900">לא הגיע לפגישה</option>
+                             </select>
                         </div>
                         <div>
-                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider">האם נמכר מנוי?</label>
-                              <div class="relative">
-                                 <select id="m-subscriptionSold" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none transition-all text-white font-medium appearance-none">
-                                     <option class="bg-dark-900">לא</option>
-                                     <option class="bg-dark-900">כן</option>
-                                 </select>
-                                 <i data-lucide="chevron-down" class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none w-5 h-5"></i>
-                             </div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">נמכר מנוי?</label>
+                             <select id="m-subscriptionSold" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                                 <option class="bg-dark-900">לא</option>
+                                 <option class="bg-dark-900">כן</option>
+                             </select>
                         </div>
                         <div class="flex items-end">
-                            <label class="flex items-center gap-4 cursor-pointer bg-dark-950/30 border border-slate-800/50 p-4 rounded-2xl w-full select-none hover:bg-dark-950/50 transition-colors group">
-                                <div class="relative">
-                                    <input type="checkbox" id="m-reminderSent" class="peer sr-only">
-                                    <div class="w-6 h-6 bg-dark-950 border-2 border-slate-600 rounded-md peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-all flex items-center justify-center">
-                                        <i data-lucide="check" class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity"></i>
-                                    </div>
-                                </div>
-                                <span class="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">בוצעה תזכורת ללקוח?</span>
+                            <label class="flex items-center gap-4 cursor-pointer bg-dark-950/30 border border-slate-800/50 p-4 rounded-2xl w-full">
+                                <input type="checkbox" id="m-reminderSent" class="w-5 h-5 text-primary-600 rounded bg-dark-900 border-slate-600">
+                                <span class="text-sm font-bold text-slate-300">בוצעה תזכורת?</span>
                             </label>
                         </div>
                     </div>
                     <div>
-                          <label class="text-xs font-bold text-primary-300 block mb-2 uppercase tracking-wider flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4"></i> הערות נוספות</label>
-                          <textarea id="m-notes" rows="3" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 focus:shadow-glow outline-none resize-none text-white placeholder-slate-600 font-medium"></textarea>
+                          <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">הערות</label>
+                          <textarea id="m-notes" rows="3" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white"></textarea>
                     </div>
-                    
-                    <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-4 border-t border-slate-800">
-                          <button type="button" id="cancel-modal-btn" class="px-8 py-4 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 font-bold transition-all">ביטול</button>
-                          <button type="submit" class="px-8 py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all flex items-center justify-center gap-3 text-lg hover:scale-[1.02] active:scale-[0.98]">
-                              <i data-lucide="save" class="w-6 h-6"></i> שמור פגישה
-                          </button>
+                    <div class="flex gap-4 pt-4">
+                          <button type="button" id="cancel-modal-btn" class="flex-1 py-4 rounded-xl text-slate-300 hover:bg-slate-800 font-bold transition-all">ביטול</button>
+                          <button type="submit" class="flex-1 py-4 rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 text-white font-black shadow-glow hover:from-primary-500 hover:to-primary-700 transition-all">שמור</button>
                     </div>
                 </form>
             </div>
@@ -290,7 +251,6 @@
     </div>
 
     <script>
-        // --- CONFIGURATION (השתמשנו במפתחות שזיהינו שעובדים) ---
         const SUPABASE_URL = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || 'https://qtwnkyeaecdumjkokdbk.supabase.co';
         const SUPABASE_KEY = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_KEY) || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0d25reWVhZWNkdW1qa29rZGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ4NTI0MzYsImV4cCI6MjA4MDQyODQzNn0.FVxRtqGnjLXMGvVDR9jF_1oYCXMNyjnmIaNtCFMPD2o';
 
@@ -311,10 +271,9 @@
 
         // --- STATE ---
         let state = {
-            user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: ''
+            user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: '', chart: null
         };
 
-        // --- DOM ELEMENTS ---
         const els = {
             authScreen: document.getElementById('auth-screen'), dashboard: document.getElementById('dashboard'),
             loginForm: document.getElementById('login-form'), meetingModal: document.getElementById('meeting-modal'),
@@ -325,7 +284,6 @@
             loginError: document.getElementById('login-error')
         };
 
-        // --- INIT ---
         async function init() {
             lucide.createIcons();
             const { data: { session } } = await sb.auth.getSession();
@@ -335,33 +293,27 @@
             renderView();
         }
 
-        // --- VIEW CONTROLLER ---
         function renderView() {
             if (!state.user) { els.authScreen.classList.remove('hide'); els.dashboard.classList.add('hide'); }
             else { els.authScreen.classList.add('hide'); els.dashboard.classList.remove('hide'); fetchMeetings(); }
         }
 
-        // --- DATA ---
         async function fetchMeetings() {
             els.tableBody.innerHTML = ''; els.spinner.classList.remove('hide'); els.emptyState.classList.add('hide');
             const { data, error } = await sb.from('meetings').select('*').gte('date', state.filterStart).lte('date', state.filterEnd).order('date', { ascending: true }).order('time', { ascending: true });
             els.spinner.classList.add('hide');
             if (error) { console.error('Error:', error); return; }
-            state.meetings = data || []; renderMeetings(); renderStats();
+            state.meetings = data || []; 
+            renderMeetings(); 
+            renderStats();
+            renderChart(); // קריאה לפונקציית הגרף החדשה
         }
 
         async function saveMeeting(meeting) {
-            // התיקון הקריטי לחני - וידוא שה-ID קיים
-            if (!state.user || !state.user.id) { alert('שגיאה: לא ניתן לזהות את המשתמש המחובר. נסה להתחבר מחדש.'); return; }
+            if (!state.user || !state.user.id) { alert('שגיאה: לא ניתן לזהות משתמש'); return; }
             meeting.user_id = state.user.id; 
-            console.log('Saving meeting with Data:', meeting); // לוג לבדיקה
-
             const { error } = await sb.from('meetings').upsert(meeting);
-            if (error) { 
-                console.error('Save Error:', error);
-                alert('שגיאה בשמירה: ' + (error.message || error.details || 'אירעה תקלה')); 
-                return; 
-            }
+            if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
             closeModal(); fetchMeetings();
         }
 
@@ -371,7 +323,82 @@
             if (error) alert(error.message); else fetchMeetings();
         }
 
-        // --- RENDERERS (עיצוב חדש לטבלה ולכרטיסיות) ---
+        // --- CHART LOGIC (הלוגיקה החדשה של הגרף) ---
+        function renderChart() {
+            const ctx = document.getElementById('meetingsChart').getContext('2d');
+            
+            // 1. יצירת מילון של כל התאריכים בטווח (כולל ימים ללא פגישות)
+            const dateMap = {};
+            let curr = new Date(state.filterStart);
+            const end = new Date(state.filterEnd);
+            
+            while(curr <= end) {
+                const dateStr = curr.toISOString().split('T')[0];
+                dateMap[dateStr] = 0;
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            // 2. מילוי הכמויות
+            state.meetings.forEach(m => {
+                if (dateMap[m.date] !== undefined) dateMap[m.date]++;
+            });
+
+            // 3. פרמוט התוויות לגרף (יום עברי + תאריך מקוצר)
+            const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+            const labels = Object.keys(dateMap).map(dateStr => {
+                const d = new Date(dateStr);
+                const dayName = daysHebrew[d.getDay()];
+                const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
+                return `${dayName} ${shortDate}`;
+            });
+            const dataValues = Object.values(dateMap);
+
+            // 4. בניית הגרף (או עדכון אם קיים)
+            if (state.chart) state.chart.destroy();
+
+            state.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'כמות פגישות',
+                        data: dataValues,
+                        backgroundColor: '#844dff',
+                        hoverBackgroundColor: '#a17aff',
+                        borderRadius: 8,
+                        barThickness: 'flex',
+                        maxBarThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            backgroundColor: 'rgba(30, 30, 46, 0.9)', 
+                            titleColor: '#fff', 
+                            bodyColor: '#fff',
+                            borderColor: 'rgba(132, 77, 255, 0.3)',
+                            borderWidth: 1,
+                            padding: 10
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, color: '#94a3b8' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
         function renderMeetings() {
             const filtered = state.meetings.filter(m => m.client_name.includes(state.searchTerm) || (m.phone && m.phone.includes(state.searchTerm)) || m.created_by.includes(state.searchTerm));
             els.tableBody.innerHTML = '';
@@ -379,16 +406,14 @@
 
             filtered.forEach(m => {
                 const tr = document.createElement('tr');
-                // שורת טבלה בעיצוב גלאס כהה
                 tr.className = 'glass-light hover:bg-slate-800/50 transition-all duration-300 rounded-[1.5rem] group mb-3 md:mb-0 block md:table-row mobile-card';
-                
                 let badgeClass = 'bg-amber-950/50 text-amber-300 border-amber-800/50 shadow-[0_0_10px_rgba(251,191,36,0.2)]';
                 if(m.status === 'אישר הגעה') badgeClass = 'bg-blue-950/50 text-blue-300 border-blue-800/50 shadow-[0_0_10px_rgba(96,165,250,0.2)]';
                 if(m.status === 'הגיע לפגישה') badgeClass = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_10px_rgba(52,211,153,0.2)]';
                 if(m.status === 'לא הגיע לפגישה') badgeClass = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_10px_rgba(251,113,133,0.2)]';
 
                 tr.innerHTML = `
-                    <td class="hidden md:table-cell px-6 py-5 first:rounded-r-[1.5rem] border-y border-r border-transparent">
+                    <td class="hidden md:table-cell px-6 py-5 first:rounded-r-[1.5rem] border-y border-transparent">
                         <div class="flex flex-col">
                             <span class="font-black text-white text-lg flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-primary-400"></i> ${m.time.slice(0,5)}</span>
                             <span class="text-primary-300 text-xs font-bold uppercase tracking-wider mt-1 bg-primary-950/50 px-2 py-1 rounded-md w-fit">${m.date}</span>
@@ -401,13 +426,7 @@
                         </div>
                     </td>
                       <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
-                        <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-2 backdrop-blur-md">
-                           <span class="relative flex h-2 w-2">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
-                            </span>
-                           ${m.status}
-                        </span>
+                        <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-2 backdrop-blur-md">${m.status}</span>
                     </td>
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         <span class="text-slate-200 font-medium flex items-center gap-2"><i data-lucide="shield-user" class="w-4 h-4 text-slate-500"></i> ${m.created_by}</span>
@@ -429,120 +448,3 @@
                                 <p class="text-sm text-primary-300 font-medium flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4"></i> ${m.date} | ${m.time.slice(0,5)}</p>
                                 <div class="mt-3 flex flex-wrap gap-2">
                                      <span class="px-2 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">${m.status}</span>
-                                     ${m.subscription_sold === 'כן' ? '<span class="text-emerald-300 font-bold bg-emerald-950/30 border border-emerald-800/30 px-2 py-1 rounded-full text-[10px]">מנוי נמכר</span>' : ''}
-                                </div>
-                           </div>
-                         </div>
-                    </td>
-                `;
-                tr.querySelector('.edit-btn').onclick = () => openModal(m);
-                tr.querySelector('.del-btn').onclick = () => deleteMeeting(m.id);
-                if(window.innerWidth < 768) tr.onclick = (e) => { if(!e.target.closest('button')) openModal(m); };
-                els.tableBody.appendChild(tr);
-            });
-            lucide.createIcons();
-        }
-
-        function renderStats() {
-            const total = state.meetings.length;
-            const attended = state.meetings.filter(m => m.status === 'הגיע לפגישה').length;
-            const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
-            const pending = state.meetings.filter(m => m.status === 'עדיין לא אישר הגעה').length;
-
-            // כרטיסיות סטטיסטיקה בעיצוב חדשני
-            const cards = [
-                { title: 'סה״כ פגישות', val: total, icon: 'layers', color: 'text-blue-400', bg: 'bg-blue-950/30', border: 'border-blue-800/30', shadow: 'shadow-[0_0_20px_rgba(96,165,250,0.15)]', gradient: 'from-blue-600 to-blue-900' },
-                { title: 'ממתינים לאישור', val: pending, icon: 'hourglass', color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/30', shadow: 'shadow-[0_0_20px_rgba(251,191,36,0.15)]', gradient: 'from-amber-600 to-amber-900' },
-                { title: 'הגיעו בפועל', val: attended, icon: 'users-check', color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/30', shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.15)]', gradient: 'from-emerald-600 to-emerald-900' },
-                { title: 'מנויים שנמכרו', val: sold, icon: 'gem', color: 'text-primary-400', bg: 'bg-primary-950/30', border: 'border-primary-800/30', shadow: 'shadow-glow', gradient: 'from-primary-600 to-primary-900' }
-            ];
-
-            els.statsContainer.innerHTML = cards.map(c => `
-                <div class="glass rounded-[2rem] p-1.5 ${c.shadow} hover:-translate-y-1 transition-all duration-300 group">
-                    <div class="bg-dark-950/40 rounded-[1.7rem] p-6 h-full border border-transparent group-hover:${c.border} transition-colors relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-br ${c.gradient} opacity-5 group-hover:opacity-10 transition-opacity"></div>
-                        <div class="relative z-10 flex items-start justify-between">
-                            <div>
-                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    <i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i> ${c.title}
-                                </p>
-                                <h3 class="text-5xl font-black text-white tracking-tight">${c.val}</h3>
-                            </div>
-                            <div class="p-4 rounded-2xl ${c.bg} ${c.border} border shadow-sm group-hover:scale-110 transition-transform">
-                                <i data-lucide="${c.icon}" class="w-8 h-8 ${c.color}"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        // --- HANDLERS (לוגיקה זהה, רק הוספנו לוגים לבדיקה של חני) ---
-        els.loginForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            els.loginError.classList.add('hide');
-            const btn = document.getElementById('login-btn'); const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i>'; lucide.createIcons();
-            const { error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) { els.loginError.textContent = 'שגיאה בהתחברות: ' + error.message; els.loginError.classList.remove('hide'); btn.innerHTML = originalText; }
-        };
-        document.getElementById('logout-btn').onclick = () => sb.auth.signOut();
-
-        function openModal(meeting = null) {
-            els.meetingModal.classList.remove('hide'); document.body.style.overflow = 'hidden'; // מניעת גלילה ברקע
-            els.meetingForm.reset();
-            if (meeting) {
-                document.getElementById('modal-title').textContent = 'עריכת פגישה';
-                document.getElementById('meeting-id').value = meeting.id;
-                document.getElementById('m-clientName').value = meeting.client_name;
-                document.getElementById('m-date').value = meeting.date;
-                document.getElementById('m-time').value = meeting.time.slice(0,5);
-                document.getElementById('m-phone').value = meeting.phone;
-                document.getElementById('m-createdBy').value = meeting.created_by;
-                document.getElementById('m-clientType').value = meeting.client_type;
-                document.getElementById('m-status').value = meeting.status;
-                document.getElementById('m-subscriptionSold').value = meeting.subscription_sold;
-                document.getElementById('m-reminderSent').checked = meeting.reminder_sent;
-                document.getElementById('m-notes').value = meeting.notes || '';
-            } else {
-                document.getElementById('modal-title').textContent = 'פגישה חדשה';
-                document.getElementById('meeting-id').value = '';
-                document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
-                document.getElementById('m-time').value = '10:00';
-            }
-        }
-        function closeModal() { els.meetingModal.classList.add('hide'); document.body.style.overflow = ''; }
-        document.getElementById('add-meeting-btn').onclick = () => openModal();
-        document.getElementById('close-modal-btn').onclick = closeModal;
-        document.getElementById('cancel-modal-btn').onclick = closeModal;
-        
-        els.meetingForm.onsubmit = (e) => {
-            e.preventDefault();
-            const id = document.getElementById('meeting-id').value;
-            // התיקון של ה-ID מוטמע גם כאן
-            const meeting = {
-                client_name: document.getElementById('m-clientName').value,
-                date: document.getElementById('m-date').value,
-                time: document.getElementById('m-time').value,
-                phone: document.getElementById('m-phone').value,
-                created_by: document.getElementById('m-createdBy').value,
-                client_type: document.getElementById('m-clientType').value,
-                status: document.getElementById('m-status').value,
-                subscription_sold: document.getElementById('m-subscriptionSold').value,
-                reminder_sent: document.getElementById('m-reminderSent').checked,
-                notes: document.getElementById('m-notes').value
-            };
-            if(id) meeting.id = id;
-            saveMeeting(meeting);
-        };
-
-        els.dateStart.onchange = (e) => { state.filterStart = e.target.value; fetchMeetings(); };
-        els.dateEnd.onchange = (e) => { state.filterEnd = e.target.value; fetchMeetings(); };
-        els.searchInput.oninput = (e) => { state.searchTerm = e.target.value; renderMeetings(); };
-        init();
-    </script>
-</body>
-</html>
