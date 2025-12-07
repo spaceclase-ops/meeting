@@ -448,3 +448,110 @@
                                 <p class="text-sm text-primary-300 font-medium flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4"></i> ${m.date} | ${m.time.slice(0,5)}</p>
                                 <div class="mt-3 flex flex-wrap gap-2">
                                      <span class="px-2 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">${m.status}</span>
+                                </div>
+                           </div>
+                         </div>
+                    </td>
+                `;
+                tr.querySelector('.edit-btn').onclick = () => openModal(m);
+                tr.querySelector('.del-btn').onclick = () => deleteMeeting(m.id);
+                if(window.innerWidth < 768) tr.onclick = (e) => { if(!e.target.closest('button')) openModal(m); };
+                els.tableBody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function renderStats() {
+            const total = state.meetings.length;
+            const attended = state.meetings.filter(m => m.status === 'הגיע לפגישה').length;
+            const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
+            const pending = state.meetings.filter(m => m.status === 'עדיין לא אישר הגעה').length;
+            const cards = [
+                { title: 'סה״כ פגישות', val: total, icon: 'layers', color: 'text-blue-400', bg: 'bg-blue-950/30', border: 'border-blue-800/30', shadow: 'shadow-[0_0_20px_rgba(96,165,250,0.15)]', gradient: 'from-blue-600 to-blue-900' },
+                { title: 'ממתינים לאישור', val: pending, icon: 'hourglass', color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/30', shadow: 'shadow-[0_0_20px_rgba(251,191,36,0.15)]', gradient: 'from-amber-600 to-amber-900' },
+                { title: 'הגיעו בפועל', val: attended, icon: 'users-check', color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/30', shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.15)]', gradient: 'from-emerald-600 to-emerald-900' },
+                { title: 'מנויים שנמכרו', val: sold, icon: 'gem', color: 'text-primary-400', bg: 'bg-primary-950/30', border: 'border-primary-800/30', shadow: 'shadow-glow', gradient: 'from-primary-600 to-primary-900' }
+            ];
+            els.statsContainer.innerHTML = cards.map(c => `
+                <div class="glass rounded-[2rem] p-1.5 ${c.shadow} hover:-translate-y-1 transition-all duration-300 group">
+                    <div class="bg-dark-950/40 rounded-[1.7rem] p-6 h-full border border-transparent group-hover:${c.border} transition-colors relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br ${c.gradient} opacity-5 group-hover:opacity-10 transition-opacity"></div>
+                        <div class="relative z-10 flex items-start justify-between">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2"><i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i> ${c.title}</p>
+                                <h3 class="text-5xl font-black text-white tracking-tight">${c.val}</h3>
+                            </div>
+                            <div class="p-4 rounded-2xl ${c.bg} ${c.border} border shadow-sm group-hover:scale-110 transition-transform"><i data-lucide="${c.icon}" class="w-8 h-8 ${c.color}"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        els.loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            els.loginError.classList.add('hide');
+            const btn = document.getElementById('login-btn'); const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto"></i>'; lucide.createIcons();
+            const { error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) { els.loginError.textContent = 'שגיאה בהתחברות: ' + error.message; els.loginError.classList.remove('hide'); btn.innerHTML = originalText; }
+        };
+        document.getElementById('logout-btn').onclick = () => sb.auth.signOut();
+
+        function openModal(meeting = null) {
+            els.meetingModal.classList.remove('hide'); document.body.style.overflow = 'hidden';
+            els.meetingForm.reset();
+            if (meeting) {
+                document.getElementById('modal-title').textContent = 'עריכת פגישה';
+                document.getElementById('meeting-id').value = meeting.id;
+                document.getElementById('m-clientName').value = meeting.client_name;
+                document.getElementById('m-date').value = meeting.date;
+                document.getElementById('m-time').value = meeting.time.slice(0,5);
+                document.getElementById('m-phone').value = meeting.phone;
+                document.getElementById('m-createdBy').value = meeting.created_by;
+                document.getElementById('m-clientType').value = meeting.client_type;
+                document.getElementById('m-status').value = meeting.status;
+                document.getElementById('m-subscriptionSold').value = meeting.subscription_sold;
+                document.getElementById('m-reminderSent').checked = meeting.reminder_sent;
+                document.getElementById('m-notes').value = meeting.notes || '';
+            } else {
+                document.getElementById('modal-title').textContent = 'פגישה חדשה';
+                document.getElementById('meeting-id').value = '';
+                document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('m-time').value = '10:00';
+            }
+        }
+        function closeModal() { els.meetingModal.classList.add('hide'); document.body.style.overflow = ''; }
+        document.getElementById('add-meeting-btn').onclick = () => openModal();
+        document.getElementById('close-modal-btn').onclick = closeModal;
+        document.getElementById('cancel-modal-btn').onclick = closeModal;
+        
+        els.meetingForm.onsubmit = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('meeting-id').value;
+            const meeting = {
+                client_name: document.getElementById('m-clientName').value,
+                date: document.getElementById('m-date').value,
+                time: document.getElementById('m-time').value,
+                phone: document.getElementById('m-phone').value,
+                created_by: document.getElementById('m-createdBy').value,
+                client_type: document.getElementById('m-clientType').value,
+                status: document.getElementById('m-status').value,
+                subscription_sold: document.getElementById('m-subscriptionSold').value,
+                reminder_sent: document.getElementById('m-reminderSent').checked,
+                notes: document.getElementById('m-notes').value
+            };
+            if(id) meeting.id = id;
+            saveMeeting(meeting);
+        };
+
+        els.dateStart.onchange = (e) => { state.filterStart = e.target.value; fetchMeetings(); };
+        els.dateEnd.onchange = (e) => { state.filterEnd = e.target.value; fetchMeetings(); };
+        els.searchInput.oninput = (e) => { state.searchTerm = e.target.value; renderMeetings(); };
+        init();
+    </script>
+</body>
+</html>
