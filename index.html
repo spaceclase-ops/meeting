@@ -255,12 +255,33 @@
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
         
+        // --- HELPER: Get Current Week (Sunday to Saturday) ---
+        function getCurrentWeek() {
+            const today = new Date();
+            const day = today.getDay(); // 0 = Sunday, 1 = Monday...
+            
+            // Calculate Sunday (Start)
+            const sunday = new Date(today);
+            sunday.setDate(today.getDate() - day);
+            
+            // Calculate Saturday (End)
+            const saturday = new Date(sunday);
+            saturday.setDate(sunday.getDate() + 6); // Add 6 days to Sunday
+            
+            return {
+                start: sunday.toISOString().split('T')[0],
+                end: saturday.toISOString().split('T')[0]
+            };
+        }
+
+        const currentWeek = getCurrentWeek();
+
         // --- STATE ---
         let state = {
             user: null,
             meetings: [],
-            filterStart: new Date().toISOString().split('T')[0],
-            filterEnd: new Date().toISOString().split('T')[0],
+            filterStart: currentWeek.start, // מתחיל מיום ראשון האחרון
+            filterEnd: currentWeek.end,     // נגמר ביום שבת הקרוב
             searchTerm: ''
         };
 
@@ -553,6 +574,7 @@
     </script>
 </body>
 </html>
+
 
 
 
