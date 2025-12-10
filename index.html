@@ -146,14 +146,9 @@
                 </div>
 
                 <div class="space-y-6">
-                    <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-                        <div class="relative w-full md:w-72 group">
-                             <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
-                             <input type="text" id="search-input" placeholder="חיפוש..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
-                        </div>
-                        <button id="export-btn" class="flex items-center gap-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 px-6 py-3 rounded-full transition-all text-sm font-bold border border-emerald-600/30">
-                            <i data-lucide="download" class="w-4 h-4"></i> ייצוא לאקסל
-                        </button>
+                    <div class="relative w-full md:w-72 group">
+                         <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5"></i>
+                         <input type="text" id="search-input" placeholder="חיפוש..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
                     </div>
                     
                     <div class="overflow-x-auto rounded-[2rem] glass border-0 p-2">
@@ -162,8 +157,8 @@
                                 <tr>
                                     <th class="px-6 py-4">מועד</th>
                                     <th class="px-6 py-4">לקוח</th>
-                                    <th class="px-6 py-4">פרטים (לחץ לעריכה)</th>
-                                    <th class="px-6 py-4">סטטוס (לחץ לעריכה)</th>
+                                    <th class="px-6 py-4">פרטים</th>
+                                    <th class="px-6 py-4">סטטוס</th>
                                     <th class="px-6 py-4">נציג</th>
                                     <th class="px-6 py-4">מנוי</th>
                                     <th class="px-6 py-4"></th>
@@ -293,53 +288,6 @@
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // --- HELPER: Open Edit Modal Globally ---
-        window.openEditModal = (id) => {
-            const meeting = state.meetings.find(m => m.id === id);
-            if(meeting) openModal(meeting);
-        };
-
-        // --- HELPER: Export to CSV ---
-        function exportToCSV() {
-            if (state.meetings.length === 0) { alert('אין נתונים לייצוא'); return; }
-            
-            // כותרות בעברית
-            let csvContent = "\uFEFF"; // BOM for Hebrew support
-            csvContent += "תאריך,שעה,שם הלקוח,טלפון,נציג מטפל,סטטוס,סוג לקוח,רצינות,מתקן,נמכר מנוי,הערות\n";
-
-            state.meetings.forEach(m => {
-                const row = [
-                    m.date,
-                    m.time,
-                    `"${m.client_name}"`, // עוטפים במרכאות כדי למנוע בעיות עם פסיקים בשם
-                    `"${m.phone}"`,
-                    m.created_by,
-                    m.status,
-                    m.client_type,
-                    m.seriousness || '',
-                    m.facilities || '',
-                    m.subscription_sold,
-                    `"${(m.notes || '').replace(/"/g, '""')}"` // טיפול במרכאות בתוך הערות
-                ].join(",");
-                csvContent += row + "\n";
-            });
-
-            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "פגישות_נשר.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // --- HELPER: Date Formatter (Israeli) ---
-        function formatDateHebrew(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-'); // 2025-12-10
-            return `${parts[2]}/${parts[1]}/${parts[0]}`; // 10/12/2025
-        }
-
         function getCurrentWeek() {
             const today = new Date();
             const day = today.getDay(); 
@@ -364,8 +312,7 @@
             liveMetricsContainer: document.getElementById('live-metrics-container'),
             dateStart: document.getElementById('filter-date-start'),
             dateEnd: document.getElementById('filter-date-end'), searchInput: document.getElementById('search-input'),
-            loginError: document.getElementById('login-error'),
-            exportBtn: document.getElementById('export-btn')
+            loginError: document.getElementById('login-error')
         };
 
         async function init() {
@@ -384,6 +331,7 @@
 
         async function fetchMeetings() {
             els.tableBody.innerHTML = ''; els.spinner.classList.remove('hide'); els.emptyState.classList.add('hide');
+            // Fetch sorted by created_at descending (Last In, First Out)
             const { data, error } = await sb.from('meetings')
                 .select('*')
                 .gte('date', state.filterStart)
@@ -414,6 +362,7 @@
         }
 
         function renderLiveMetrics() {
+            // 1. Next 3 Meetings
             const now = new Date();
             const upcoming = state.meetings
                 .filter(m => new Date(m.date + 'T' + m.time) > now)
@@ -423,33 +372,38 @@
             let upcomingHtml = '<ul class="space-y-2">';
             if(upcoming.length === 0) upcomingHtml += '<li class="text-slate-500 text-xs">אין פגישות קרובות</li>';
             upcoming.forEach(m => {
-                // הוספת יכולת לחיצה לפתיחת מודאל
-                upcomingHtml += `<li onclick="openEditModal('${m.id}')" class="flex justify-between text-xs text-white bg-white/5 p-1.5 rounded cursor-pointer hover:bg-white/10 transition-colors">
-                    <span>${m.time.slice(0,5)} ${m.client_name}</span><span class="text-primary-300">${formatDateHebrew(m.date).slice(0,5)}</span>
-                </li>`;
+                upcomingHtml += `<li class="flex justify-between text-xs text-white bg-white/5 p-1.5 rounded"><span>${m.time.slice(0,5)} ${m.client_name}</span><span class="text-primary-300">${m.date.slice(5)}</span></li>`;
             });
             upcomingHtml += '</ul>';
 
+            // 2. Today's Meetings
             const todayStr = now.toISOString().split('T')[0];
             const todayCount = state.meetings.filter(m => m.date === todayStr).length;
             const dateDisplay = now.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) + ' ' + now.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+            
+            // שינוי לוגיקה: אם 0, הצג טקסט
             const todayDisplay = todayCount === 0 ? '<span class="text-sm font-medium text-slate-400">הסתיימו הפגישות להיום</span>' : todayCount;
 
+            // 3. Leaderboard - Top 3
             const counts = {};
             state.meetings.forEach(m => { counts[m.created_by] = (counts[m.created_by] || 0) + 1; });
-            const sortedLeaders = Object.entries(counts).sort(([,a], [,b]) => b - a).slice(0, 3);
+            const sortedLeaders = Object.entries(counts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3);
             
             let leaderHtml = '<ul class="space-y-1">';
             if(sortedLeaders.length === 0) leaderHtml += '<li class="text-slate-500 text-xs">-</li>';
             sortedLeaders.forEach(([name, count], index) => {
-                const colors = ['text-amber-400', 'text-slate-300', 'text-orange-400'];
+                const colors = ['text-amber-400', 'text-slate-300', 'text-orange-400']; // Gold, Silver, Bronze
                 leaderHtml += `<li class="flex justify-between text-xs text-slate-300"><span>${index+1}. ${name}</span><span class="font-bold ${colors[index] || 'text-slate-400'}">${count}</span></li>`;
             });
             leaderHtml += '</ul>';
 
+            // 4. Conversion Rate
             const total = state.meetings.length;
             const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
             const conversion = total > 0 ? Math.round((sold / total) * 100) : 0;
+            // שינוי לוגיקה: אם קטן מ-15%, הצג טקסט
             const conversionDisplay = conversion < 15 ? '<span class="text-sm font-medium text-slate-400">עדיין בהמשך טיפול</span>' : `${conversion}%`;
 
             const metrics = [
@@ -485,17 +439,21 @@
             });
 
             const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+            // יצירת תוויות מרובות שורות (מערך של מחרוזות לכל נקודה בציר)
             const labels = Object.keys(dateMap).map(dateStr => {
                 const d = new Date(dateStr);
                 const dayName = daysHebrew[d.getDay()];
                 const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
                 const count = dateMap[dateStr];
+                // שורה ראשונה: יום ותאריך, שורה שנייה: כמות בסוגריים
                 return [`${dayName} ${shortDate}`, `(${count})`];
             }).reverse();
 
             const dataValues = Object.values(dateMap).reverse();
 
             if (state.chart) state.chart.destroy();
+            // ביטול פלאגין המספרים למעלה כי העברנו אותם למטה
+            // Chart.register(ChartDataLabels); - לא מפעילים
 
             state.chart = new Chart(ctx, {
                 type: 'bar',
@@ -554,14 +512,11 @@
                 if(m.status === 'הגיע לפגישה') badgeClass = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_10px_rgba(52,211,153,0.2)]';
                 if(m.status === 'לא הגיע לפגישה') badgeClass = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_10px_rgba(251,113,133,0.2)]';
 
-                // פורמט תאריך ישראלי
-                const hebrewDate = formatDateHebrew(m.date);
-
                 tr.innerHTML = `
                     <td class="hidden md:table-cell px-6 py-5 first:rounded-r-[1.5rem] border-y border-transparent">
                         <div class="flex flex-col">
                             <span class="font-black text-white text-lg flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4 text-primary-400"></i> ${m.time.slice(0,5)}</span>
-                            <span class="text-primary-300 text-xs font-bold uppercase tracking-wider mt-1 bg-primary-950/50 px-2 py-1 rounded-md w-fit">${hebrewDate}</span>
+                            <span class="text-primary-300 text-xs font-bold uppercase tracking-wider mt-1 bg-primary-950/50 px-2 py-1 rounded-md w-fit">${m.date}</span>
                         </div>
                     </td>
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
@@ -570,13 +525,13 @@
                             <span class="text-xs text-slate-400 mt-1 flex items-center gap-1">#${m.customer_number || '-'} | ${m.client_type || '-'}</span>
                         </div>
                     </td>
-                    <td onclick="openEditModal('${m.id}')" class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors group/edit">
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         <div class="flex flex-col gap-1">
-                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit group-hover/edit:bg-primary-600/30 transition-colors">רצינות: ${m.seriousness || '-'}</span>
-                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit group-hover/edit:bg-primary-600/30 transition-colors">מתקן: ${m.facilities || '-'}</span>
+                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">רצינות: ${m.seriousness || '-'}</span>
+                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">מתקן: ${m.facilities || '-'}</span>
                         </div>
                     </td>
-                    <td onclick="openEditModal('${m.id}')" class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors">
+                      <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-2 backdrop-blur-md">${m.status}</span>
                     </td>
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
@@ -593,7 +548,7 @@
                          <div class="md:hidden flex justify-between items-center">
                            <div>
                                 <h3 class="font-black text-white text-lg mb-1">${m.client_name}</h3>
-                                <p class="text-sm text-primary-300 font-medium flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4"></i> ${hebrewDate} | ${m.time.slice(0,5)}</p>
+                                <p class="text-sm text-primary-300 font-medium flex items-center gap-2"><i data-lucide="calendar-clock" class="w-4 h-4"></i> ${m.date} | ${m.time.slice(0,5)}</p>
                                 <div class="mt-3 flex flex-wrap gap-2">
                                      <span class="px-2 py-1 rounded-full text-[10px] font-bold border ${badgeClass}">${m.status}</span>
                                 </div>
@@ -609,7 +564,34 @@
             lucide.createIcons();
         }
 
-        els.exportBtn.onclick = exportToCSV;
+        function renderStats() {
+            const total = state.meetings.length;
+            const attended = state.meetings.filter(m => m.status === 'הגיע לפגישה').length;
+            const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
+            const pending = state.meetings.filter(m => m.status === 'עדיין לא אישר הגעה').length;
+            const cards = [
+                { title: 'סה״כ פגישות', val: total, icon: 'layers', color: 'text-blue-400', bg: 'bg-blue-950/30', border: 'border-blue-800/30', shadow: 'shadow-[0_0_20px_rgba(96,165,250,0.15)]', gradient: 'from-blue-600 to-blue-900' },
+                { title: 'ממתינים לאישור', val: pending, icon: 'hourglass', color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/30', shadow: 'shadow-[0_0_20px_rgba(251,191,36,0.15)]', gradient: 'from-amber-600 to-amber-900' },
+                { title: 'הגיעו בפועל', val: attended, icon: 'users-check', color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/30', shadow: 'shadow-[0_0_20px_rgba(52,211,153,0.15)]', gradient: 'from-emerald-600 to-emerald-900' },
+                { title: 'מנויים שנמכרו', val: sold, icon: 'gem', color: 'text-primary-400', bg: 'bg-primary-950/30', border: 'border-primary-800/30', shadow: 'shadow-glow', gradient: 'from-primary-600 to-primary-900' }
+            ];
+            els.statsContainer.innerHTML = cards.map(c => `
+                <div class="glass rounded-[2rem] p-1.5 ${c.shadow} hover:-translate-y-1 transition-all duration-300 group">
+                    <div class="bg-dark-950/40 rounded-[1.7rem] p-6 h-full border border-transparent group-hover:${c.border} transition-colors relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br ${c.gradient} opacity-5 group-hover:opacity-10 transition-opacity"></div>
+                        <div class="relative z-10 flex items-start justify-between">
+                            <div>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2"><i data-lucide="${c.icon}" class="w-4 h-4 ${c.color}"></i> ${c.title}</p>
+                                <h3 class="text-5xl font-black text-white tracking-tight">${c.val}</h3>
+                            </div>
+                            <div class="p-4 rounded-2xl ${c.bg} ${c.border} border shadow-sm group-hover:scale-110 transition-transform"><i data-lucide="${c.icon}" class="w-8 h-8 ${c.color}"></i></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
         els.loginForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
