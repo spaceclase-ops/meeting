@@ -12,7 +12,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
@@ -344,7 +343,7 @@
             state.meetings = data || []; 
             renderMeetings(); 
             renderStats();
-            renderLiveMetrics(); // New Logic
+            renderLiveMetrics(); 
             renderChart();
         }
 
@@ -381,23 +380,37 @@
             const todayStr = now.toISOString().split('T')[0];
             const todayCount = state.meetings.filter(m => m.date === todayStr).length;
             const dateDisplay = now.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) + ' ' + now.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+            
+            // שינוי לוגיקה: אם 0, הצג טקסט
+            const todayDisplay = todayCount === 0 ? '<span class="text-sm font-medium text-slate-400">הסתיימו הפגישות להיום</span>' : todayCount;
 
-            // 3. Leaderboard
+            // 3. Leaderboard - Top 3
             const counts = {};
             state.meetings.forEach(m => { counts[m.created_by] = (counts[m.created_by] || 0) + 1; });
-            const leader = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, '-');
-            const leaderCount = counts[leader] || 0;
+            const sortedLeaders = Object.entries(counts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 3);
+            
+            let leaderHtml = '<ul class="space-y-1">';
+            if(sortedLeaders.length === 0) leaderHtml += '<li class="text-slate-500 text-xs">-</li>';
+            sortedLeaders.forEach(([name, count], index) => {
+                const colors = ['text-amber-400', 'text-slate-300', 'text-orange-400']; // Gold, Silver, Bronze
+                leaderHtml += `<li class="flex justify-between text-xs text-slate-300"><span>${index+1}. ${name}</span><span class="font-bold ${colors[index] || 'text-slate-400'}">${count}</span></li>`;
+            });
+            leaderHtml += '</ul>';
 
             // 4. Conversion Rate
             const total = state.meetings.length;
             const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
             const conversion = total > 0 ? Math.round((sold / total) * 100) : 0;
+            // שינוי לוגיקה: אם קטן מ-15%, הצג טקסט
+            const conversionDisplay = conversion < 15 ? '<span class="text-sm font-medium text-slate-400">עדיין בהמשך טיפול</span>' : `${conversion}%`;
 
             const metrics = [
                 { title: 'הפגישות הבאות', html: upcomingHtml, icon: 'calendar-clock', color: 'text-white' },
-                { title: `פגישות להיום (${dateDisplay})`, val: todayCount, icon: 'calendar-days', color: 'text-primary-400' },
-                { title: 'מוביל שבועי', val: `${leader} (${leaderCount})`, icon: 'trophy', color: 'text-amber-400' },
-                { title: 'אחוז המרה', val: `${conversion}%`, icon: 'percent', color: 'text-emerald-400' }
+                { title: `פגישות להיום (${dateDisplay})`, html: `<div class="text-2xl font-black text-white">${todayDisplay}</div>`, icon: 'calendar-days', color: 'text-primary-400' },
+                { title: 'מובילים שבועיים', html: leaderHtml, icon: 'trophy', color: 'text-amber-400' },
+                { title: 'אחוז המרה', html: `<div class="text-2xl font-black text-emerald-400">${conversionDisplay}</div>`, icon: 'percent', color: 'text-emerald-400' }
             ];
 
             els.liveMetricsContainer.innerHTML = metrics.map(m => `
@@ -405,7 +418,7 @@
                     <div class="flex items-center gap-2 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
                         <i data-lucide="${m.icon}" class="w-4 h-4 ${m.color}"></i> ${m.title}
                     </div>
-                    <div class="text-2xl font-black text-white">${m.val !== undefined ? m.val : m.html}</div>
+                    ${m.html ? m.html : `<div class="text-2xl font-black text-white">${m.val}</div>`}
                 </div>
             `).join('');
             lucide.createIcons();
@@ -426,17 +439,21 @@
             });
 
             const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
+            // יצירת תוויות מרובות שורות (מערך של מחרוזות לכל נקודה בציר)
             const labels = Object.keys(dateMap).map(dateStr => {
                 const d = new Date(dateStr);
                 const dayName = daysHebrew[d.getDay()];
                 const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
-                return `${dayName} ${shortDate}`;
+                const count = dateMap[dateStr];
+                // שורה ראשונה: יום ותאריך, שורה שנייה: כמות בסוגריים
+                return [`${dayName} ${shortDate}`, `(${count})`];
             }).reverse();
 
             const dataValues = Object.values(dateMap).reverse();
 
             if (state.chart) state.chart.destroy();
-            Chart.register(ChartDataLabels);
+            // ביטול פלאגין המספרים למעלה כי העברנו אותם למטה
+            // Chart.register(ChartDataLabels); - לא מפעילים
 
             state.chart = new Chart(ctx, {
                 type: 'bar',
@@ -448,7 +465,7 @@
                         backgroundColor: '#844dff',
                         hoverBackgroundColor: '#a17aff',
                         borderRadius: 6,
-                        barThickness: 20, // מקלות דקים יותר
+                        barThickness: 20, 
                         maxBarThickness: 30
                     }]
                 },
@@ -457,14 +474,6 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        datalabels: {
-                            color: '#ffffff',
-                            anchor: 'end',
-                            align: 'top', // ממקם את המספר מעל העמודה
-                            offset: -2,
-                            font: { family: 'Heebo', weight: '700', size: 12 },
-                            formatter: (value) => value > 0 ? value : ''
-                        },
                         tooltip: { 
                             backgroundColor: 'rgba(30, 30, 46, 0.9)', titleColor: '#fff', bodyColor: '#fff',
                             borderColor: 'rgba(132, 77, 255, 0.3)', borderWidth: 1, padding: 10, rtl: true, textDirection: 'rtl' 
@@ -476,7 +485,14 @@
                             grid: { color: 'rgba(255, 255, 255, 0.05)' }, position: 'right'
                         },
                         x: {
-                            ticks: { color: '#e2e8f0', font: { family: 'Heebo' } }, grid: { display: false }
+                            ticks: { 
+                                color: '#e2e8f0', 
+                                font: { family: 'Heebo', size: 11 },
+                                autoSkip: false,
+                                maxRotation: 0,
+                                minRotation: 0
+                            }, 
+                            grid: { display: false }
                         }
                     }
                 }
