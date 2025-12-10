@@ -159,7 +159,7 @@
                              <input type="text" id="search-input" placeholder="חיפוש לפי שם, טלפון או נציג..." class="w-full pr-4 pl-12 py-3 glass-light rounded-full focus:border-primary-500/50 outline-none text-sm transition-all text-white placeholder-slate-500 border-0">
                         </div>
                         
-                        <button id="export-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 glass-light rounded-full text-emerald-400 hover:bg-emerald-950/30 hover:border-emerald-500/30 transition-all font-bold text-sm border-0">
+                        <button id="export-btn" class="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 glass-light rounded-full text-emerald-400 hover:bg-emerald-950/30 hover:border-emerald-500/30 transition-all font-bold text-sm border-0 cursor-pointer">
                             <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
                             ייצוא לאקסל
                         </button>
@@ -313,7 +313,7 @@
         }
         const currentWeek = getCurrentWeek();
 
-        // Helper to format date to IL format (DD/MM/YYYY)
+        // תיקון תצוגת תאריכים
         function formatDateIL(dateStr) {
             if(!dateStr) return '';
             const [y, m, d] = dateStr.split('-');
@@ -393,7 +393,7 @@
             let upcomingHtml = '<ul class="space-y-2">';
             if(upcoming.length === 0) upcomingHtml += '<li class="text-slate-500 text-xs">אין פגישות קרובות</li>';
             upcoming.forEach(m => {
-                // הוספת מזהה לפגישה ו-Class לחיץ
+                // תיקון אינטראקטיביות: הוספת onclick ומזהה
                 upcomingHtml += `<li class="flex justify-between text-xs text-white bg-white/5 hover:bg-white/10 p-2 rounded cursor-pointer transition-colors" onclick="openModalById('${m.id}')">
                     <span>${m.time.slice(0,5)} ${m.client_name}</span>
                     <span class="text-primary-300 font-medium">${formatDateIL(m.date).slice(0,5)}</span>
@@ -405,25 +405,21 @@
             const todayStr = now.toISOString().split('T')[0];
             const todayCount = state.meetings.filter(m => m.date === todayStr).length;
             const dateDisplay = now.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
-            
             const todayDisplay = todayCount === 0 ? '<span class="text-sm font-medium text-slate-400">הסתיימו הפגישות להיום</span>' : todayCount;
 
-            // 3. Leaderboard - Top 3
+            // 3. Leaderboard
             const counts = {};
             state.meetings.forEach(m => { counts[m.created_by] = (counts[m.created_by] || 0) + 1; });
-            const sortedLeaders = Object.entries(counts)
-                .sort(([,a], [,b]) => b - a)
-                .slice(0, 3);
-            
+            const sortedLeaders = Object.entries(counts).sort(([,a], [,b]) => b - a).slice(0, 3);
             let leaderHtml = '<ul class="space-y-1">';
             if(sortedLeaders.length === 0) leaderHtml += '<li class="text-slate-500 text-xs">-</li>';
             sortedLeaders.forEach(([name, count], index) => {
-                const colors = ['text-amber-400', 'text-slate-300', 'text-orange-400']; // Gold, Silver, Bronze
+                const colors = ['text-amber-400', 'text-slate-300', 'text-orange-400']; 
                 leaderHtml += `<li class="flex justify-between text-xs text-slate-300"><span>${index+1}. ${name}</span><span class="font-bold ${colors[index] || 'text-slate-400'}">${count}</span></li>`;
             });
             leaderHtml += '</ul>';
 
-            // 4. Conversion Rate
+            // 4. Conversion
             const total = state.meetings.length;
             const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
             const conversion = total > 0 ? Math.round((sold / total) * 100) : 0;
@@ -457,9 +453,7 @@
                 dateMap[dateStr] = 0;
                 curr.setDate(curr.getDate() + 1);
             }
-            state.meetings.forEach(m => {
-                if (dateMap[m.date] !== undefined) dateMap[m.date]++;
-            });
+            state.meetings.forEach(m => { if (dateMap[m.date] !== undefined) dateMap[m.date]++; });
 
             const daysHebrew = ['א\'', 'ב\'', 'ג\'', 'ד\'', 'ה\'', 'ו\'', 'ש\''];
             const labels = Object.keys(dateMap).map(dateStr => {
@@ -473,7 +467,6 @@
             const dataValues = Object.values(dateMap).reverse();
 
             if (state.chart) state.chart.destroy();
-
             state.chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -484,36 +477,13 @@
                         backgroundColor: '#844dff',
                         hoverBackgroundColor: '#a17aff',
                         borderRadius: 6,
-                        barThickness: 20, 
-                        maxBarThickness: 30
+                        barThickness: 20, maxBarThickness: 30
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { 
-                            backgroundColor: 'rgba(30, 30, 46, 0.9)', titleColor: '#fff', bodyColor: '#fff',
-                            borderColor: 'rgba(132, 77, 255, 0.3)', borderWidth: 1, padding: 10, rtl: true, textDirection: 'rtl' 
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' },
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' }, position: 'right'
-                        },
-                        x: {
-                            ticks: { 
-                                color: '#e2e8f0', 
-                                font: { family: 'Heebo', size: 11 },
-                                autoSkip: false,
-                                maxRotation: 0,
-                                minRotation: 0
-                            }, 
-                            grid: { display: false }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(30, 30, 46, 0.9)', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(132, 77, 255, 0.3)', borderWidth: 1, padding: 10, rtl: true, textDirection: 'rtl' } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, position: 'right' }, x: { ticks: { color: '#e2e8f0', font: { family: 'Heebo', size: 11 }, autoSkip: false, maxRotation: 0, minRotation: 0 }, grid: { display: false } } }
                 }
             });
         }
@@ -531,7 +501,7 @@
                 if(m.status === 'הגיע לפגישה') badgeClass = 'bg-emerald-950/50 text-emerald-300 border-emerald-800/50 shadow-[0_0_10px_rgba(52,211,153,0.2)]';
                 if(m.status === 'לא הגיע לפגישה') badgeClass = 'bg-rose-950/50 text-rose-300 border-rose-800/50 shadow-[0_0_10px_rgba(251,113,133,0.2)]';
 
-                // יצירת תאריך ישראלי לתצוגה
+                // תצוגה תאריך ישראלית
                 const displayDate = formatDateIL(m.date);
 
                 tr.innerHTML = `
@@ -547,13 +517,13 @@
                             <span class="text-xs text-slate-400 mt-1 flex items-center gap-1">#${m.customer_number || '-'} | ${m.client_type || '-'}</span>
                         </div>
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors" onclick="openModalById('${m.id}')" title="לחץ לעריכה מהירה">
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors" onclick="openModalById('${m.id}')" title="לחץ לעריכה">
                         <div class="flex flex-col gap-1">
                              <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">רצינות: ${m.seriousness || '-'}</span>
                              <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">מתקן: ${m.facilities || '-'}</span>
                         </div>
                     </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors" onclick="openModalById('${m.id}')" title="לחץ לעדכון סטטוס">
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent cursor-pointer hover:bg-white/5 transition-colors" onclick="openModalById('${m.id}')" title="לחץ לשינוי סטטוס">
                         <span class="px-3 py-1.5 rounded-full text-xs font-bold border ${badgeClass} inline-flex items-center gap-2 backdrop-blur-md">${m.status}</span>
                     </td>
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
@@ -580,7 +550,7 @@
                 `;
                 tr.querySelector('.edit-btn').onclick = (e) => { e.stopPropagation(); openModal(m); };
                 tr.querySelector('.del-btn').onclick = (e) => { e.stopPropagation(); deleteMeeting(m.id); };
-                // מובייל לחיצה כללית
+                // לחיצה במובייל
                 if(window.innerWidth < 768) tr.onclick = (e) => { if(!e.target.closest('button')) openModal(m); };
                 els.tableBody.appendChild(tr);
             });
@@ -627,7 +597,9 @@
         };
         document.getElementById('logout-btn').onclick = () => sb.auth.signOut();
 
-        // New Helper to open by ID (for click events from HTML strings)
+        // ----------------------------------------------------
+        // פונקציית עזר גלובלית לטיפול בלחיצות (תיקון הבאג)
+        // ----------------------------------------------------
         window.openModalById = function(id) {
             const meeting = state.meetings.find(m => m.id === id);
             if(meeting) openModal(meeting);
@@ -686,11 +658,11 @@
             saveMeeting(meeting);
         };
 
-        // EXPORT TO EXCEL FEATURE
+        // לוגיקת ייצוא לאקסל
         els.exportBtn.onclick = () => {
             if(!state.meetings.length) { alert('אין נתונים לייצוא'); return; }
             
-            // CSV Header with BOM for Hebrew support
+            // BOM לתמיכה בעברית באקסל
             let csvContent = "\uFEFF"; 
             csvContent += "שם לקוח,מספר לקוח,תאריך,שעה,טלפון,נציג,סטטוס,רצינות,מתקן,סוג לקוח,נמכר מנוי,הערות\n";
 
@@ -707,7 +679,7 @@
                     m.facilities || '',
                     m.client_type,
                     m.subscription_sold,
-                    (m.notes || '').replace(/,/g, ' ') // Clean commas from notes to avoid CSV break
+                    (m.notes || '').replace(/,/g, ' ') // ניקוי פסיקים כדי לא לשבור את ה-CSV
                 ];
                 csvContent += row.join(",") + "\n";
             });
