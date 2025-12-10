@@ -132,6 +132,8 @@
                     </div>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="live-metrics-container"></div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="stats-container"></div>
 
                 <div class="glass p-6 rounded-[2rem] shadow-glow relative overflow-hidden">
@@ -156,10 +158,10 @@
                                 <tr>
                                     <th class="px-6 py-4">מועד</th>
                                     <th class="px-6 py-4">לקוח</th>
+                                    <th class="px-6 py-4">פרטים</th>
                                     <th class="px-6 py-4">סטטוס</th>
                                     <th class="px-6 py-4">נציג</th>
                                     <th class="px-6 py-4">מנוי</th>
-                                    <th class="px-6 py-4 text-center">תזכורת</th>
                                     <th class="px-6 py-4"></th>
                                 </tr>
                             </thead>
@@ -188,9 +190,13 @@
                 <form id="meeting-form" class="p-6 space-y-6">
                     <input type="hidden" id="meeting-id">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="col-span-2">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">שם הלקוח</label>
                             <input type="text" id="m-clientName" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">מספר לקוח</label>
+                            <input type="text" id="m-customerNumber" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white" placeholder="אופציונלי">
                         </div>
                         <div>
                              <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">תאריך</label>
@@ -208,7 +214,32 @@
                              <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">נציג מטפל</label>
                              <input type="text" id="m-createdBy" required class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
                         </div>
-                          <div>
+                        
+                        <div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">מידת רצינות</label>
+                             <select id="m-seriousness" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                                 <option class="bg-dark-900" value="">בחר...</option>
+                                 <option class="bg-dark-900" value="רציני">נשמע רציני</option>
+                                 <option class="bg-dark-900" value="מתנדנד">מתנדנד</option>
+                                 <option class="bg-dark-900" value="לא רציני">לא כ"כ רציני</option>
+                             </select>
+                        </div>
+                        <div>
+                             <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">מתקנים מעניינים</label>
+                             <select id="m-facilities" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
+                                 <option class="bg-dark-900" value="">בחר...</option>
+                                 <option class="bg-dark-900" value="הכל">הכל</option>
+                                 <option class="bg-dark-900" value="בריכה">בריכה</option>
+                                 <option class="bg-dark-900" value="חד״כ">חד"כ</option>
+                                 <option class="bg-dark-900" value="סטודיו">סטודיו</option>
+                                 <option class="bg-dark-900" value="פילאטיס">פילאטיס מכשירים</option>
+                                 <option class="bg-dark-900" value="UFC">UFC</option>
+                                 <option class="bg-dark-900" value="סאונות">סאונות וג'קוזי</option>
+                                 <option class="bg-dark-900" value="מתחם קיץ">מתחם קיץ</option>
+                             </select>
+                        </div>
+
+                        <div>
                              <label class="text-xs font-bold text-primary-300 block mb-2 uppercase">סוג לקוח</label>
                              <select id="m-clientType" class="w-full px-5 py-4 bg-dark-950/50 border border-slate-800 rounded-2xl focus:border-primary-500 outline-none text-white">
                                  <option class="bg-dark-900">מתעניין חדש</option>
@@ -258,7 +289,6 @@
         const { createClient } = supabase;
         const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // --- HELPER: Get Current Week ---
         function getCurrentWeek() {
             const today = new Date();
             const day = today.getDay(); 
@@ -270,7 +300,6 @@
         }
         const currentWeek = getCurrentWeek();
 
-        // --- STATE ---
         let state = {
             user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: '', chart: null
         };
@@ -280,7 +309,9 @@
             loginForm: document.getElementById('login-form'), meetingModal: document.getElementById('meeting-modal'),
             meetingForm: document.getElementById('meeting-form'), tableBody: document.getElementById('meetings-table-body'),
             spinner: document.getElementById('loading-spinner'), emptyState: document.getElementById('empty-state'),
-            statsContainer: document.getElementById('stats-container'), dateStart: document.getElementById('filter-date-start'),
+            statsContainer: document.getElementById('stats-container'), 
+            liveMetricsContainer: document.getElementById('live-metrics-container'),
+            dateStart: document.getElementById('filter-date-start'),
             dateEnd: document.getElementById('filter-date-end'), searchInput: document.getElementById('search-input'),
             loginError: document.getElementById('login-error')
         };
@@ -301,12 +332,19 @@
 
         async function fetchMeetings() {
             els.tableBody.innerHTML = ''; els.spinner.classList.remove('hide'); els.emptyState.classList.add('hide');
-            const { data, error } = await sb.from('meetings').select('*').gte('date', state.filterStart).lte('date', state.filterEnd).order('date', { ascending: true }).order('time', { ascending: true });
+            // Fetch sorted by created_at descending (Last In, First Out)
+            const { data, error } = await sb.from('meetings')
+                .select('*')
+                .gte('date', state.filterStart)
+                .lte('date', state.filterEnd)
+                .order('created_at', { ascending: false }); 
+
             els.spinner.classList.add('hide');
             if (error) { console.error('Error:', error); return; }
             state.meetings = data || []; 
             renderMeetings(); 
             renderStats();
+            renderLiveMetrics(); // New Logic
             renderChart();
         }
 
@@ -324,7 +362,55 @@
             if (error) alert(error.message); else fetchMeetings();
         }
 
-        // --- CHART LOGIC (מתוקן + תגיות מספרים) ---
+        function renderLiveMetrics() {
+            // 1. Next 3 Meetings
+            const now = new Date();
+            const upcoming = state.meetings
+                .filter(m => new Date(m.date + 'T' + m.time) > now)
+                .sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time))
+                .slice(0, 3);
+            
+            let upcomingHtml = '<ul class="space-y-2">';
+            if(upcoming.length === 0) upcomingHtml += '<li class="text-slate-500 text-xs">אין פגישות קרובות</li>';
+            upcoming.forEach(m => {
+                upcomingHtml += `<li class="flex justify-between text-xs text-white bg-white/5 p-1.5 rounded"><span>${m.time.slice(0,5)} ${m.client_name}</span><span class="text-primary-300">${m.date.slice(5)}</span></li>`;
+            });
+            upcomingHtml += '</ul>';
+
+            // 2. Today's Meetings
+            const todayStr = now.toISOString().split('T')[0];
+            const todayCount = state.meetings.filter(m => m.date === todayStr).length;
+            const dateDisplay = now.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }) + ' ' + now.toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'});
+
+            // 3. Leaderboard
+            const counts = {};
+            state.meetings.forEach(m => { counts[m.created_by] = (counts[m.created_by] || 0) + 1; });
+            const leader = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b, '-');
+            const leaderCount = counts[leader] || 0;
+
+            // 4. Conversion Rate
+            const total = state.meetings.length;
+            const sold = state.meetings.filter(m => m.subscription_sold === 'כן').length;
+            const conversion = total > 0 ? Math.round((sold / total) * 100) : 0;
+
+            const metrics = [
+                { title: 'הפגישות הבאות', html: upcomingHtml, icon: 'calendar-clock', color: 'text-white' },
+                { title: `פגישות להיום (${dateDisplay})`, val: todayCount, icon: 'calendar-days', color: 'text-primary-400' },
+                { title: 'מוביל שבועי', val: `${leader} (${leaderCount})`, icon: 'trophy', color: 'text-amber-400' },
+                { title: 'אחוז המרה', val: `${conversion}%`, icon: 'percent', color: 'text-emerald-400' }
+            ];
+
+            els.liveMetricsContainer.innerHTML = metrics.map(m => `
+                <div class="glass p-4 rounded-2xl flex flex-col justify-between h-full shadow-glow/20">
+                    <div class="flex items-center gap-2 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        <i data-lucide="${m.icon}" class="w-4 h-4 ${m.color}"></i> ${m.title}
+                    </div>
+                    <div class="text-2xl font-black text-white">${m.val !== undefined ? m.val : m.html}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
         function renderChart() {
             const ctx = document.getElementById('meetingsChart').getContext('2d');
             const dateMap = {};
@@ -345,13 +431,11 @@
                 const dayName = daysHebrew[d.getDay()];
                 const shortDate = `${d.getDate()}.${d.getMonth() + 1}`;
                 return `${dayName} ${shortDate}`;
-            }).reverse(); // היפוך סדר לימין-שמאל
+            }).reverse();
 
-            const dataValues = Object.values(dateMap).reverse(); // היפוך נתונים בהתאמה
+            const dataValues = Object.values(dateMap).reverse();
 
             if (state.chart) state.chart.destroy();
-
-            // הפעלת התוסף של התגיות
             Chart.register(ChartDataLabels);
 
             state.chart = new Chart(ctx, {
@@ -363,9 +447,9 @@
                         data: dataValues,
                         backgroundColor: '#844dff',
                         hoverBackgroundColor: '#a17aff',
-                        borderRadius: 8,
-                        barThickness: 'flex',
-                        maxBarThickness: 40
+                        borderRadius: 6,
+                        barThickness: 20, // מקלות דקים יותר
+                        maxBarThickness: 30
                     }]
                 },
                 options: {
@@ -373,14 +457,13 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
-                        // הגדרת תגיות המספרים על הגרף
                         datalabels: {
                             color: '#ffffff',
                             anchor: 'end',
-                            align: 'start',
-                            offset: -4,
-                            font: { family: 'Heebo', weight: '900', size: 14 },
-                            formatter: (value) => { return value > 0 ? value : ''; } // הסתרת אפסים
+                            align: 'top', // ממקם את המספר מעל העמודה
+                            offset: -2,
+                            font: { family: 'Heebo', weight: '700', size: 12 },
+                            formatter: (value) => value > 0 ? value : ''
                         },
                         tooltip: { 
                             backgroundColor: 'rgba(30, 30, 46, 0.9)', titleColor: '#fff', bodyColor: '#fff',
@@ -423,7 +506,13 @@
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         <div class="flex flex-col">
                             <span class="font-bold text-white text-base">${m.client_name}</span>
-                            <span class="text-xs text-slate-400 mt-1 flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> ${m.client_type || '-'}</span>
+                            <span class="text-xs text-slate-400 mt-1 flex items-center gap-1">#${m.customer_number || '-'} | ${m.client_type || '-'}</span>
+                        </div>
+                    </td>
+                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
+                        <div class="flex flex-col gap-1">
+                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">רצינות: ${m.seriousness || '-'}</span>
+                             <span class="text-xs text-slate-300 bg-white/5 px-2 py-1 rounded w-fit">מתקן: ${m.facilities || '-'}</span>
                         </div>
                     </td>
                       <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
@@ -434,9 +523,6 @@
                     </td>
                     <td class="hidden md:table-cell px-6 py-5 border-y border-transparent">
                         ${m.subscription_sold === 'כן' ? '<span class="text-emerald-300 font-bold bg-emerald-950/50 border border-emerald-800/50 px-3 py-1 rounded-lg text-xs shadow-[0_0_10px_rgba(52,211,153,0.2)] flex items-center gap-1 w-fit"><i data-lucide="check-circle-2" class="w-3 h-3"></i> נמכר!</span>' : '<span class="text-slate-600 text-xl font-thin">-</span>'}
-                    </td>
-                    <td class="hidden md:table-cell px-6 py-5 border-y border-transparent text-center">
-                        ${m.reminder_sent ? '<div class="bg-emerald-950/30 p-2 rounded-full inline-flex shadow-[0_0_10px_rgba(52,211,153,0.1)]"><i data-lucide="check" class="w-5 h-5 text-emerald-400"></i></div>' : '<div class="bg-slate-800/50 p-2 rounded-full inline-flex"><i data-lucide="x" class="w-5 h-5 text-slate-600"></i></div>'}
                     </td>
                     <td class="px-6 py-5 last:rounded-l-[1.5rem] border-y border-l border-transparent text-left">
                         <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all md:flex">
@@ -509,10 +595,13 @@
                 document.getElementById('modal-title').textContent = 'עריכת פגישה';
                 document.getElementById('meeting-id').value = meeting.id;
                 document.getElementById('m-clientName').value = meeting.client_name;
+                document.getElementById('m-customerNumber').value = meeting.customer_number || '';
                 document.getElementById('m-date').value = meeting.date;
                 document.getElementById('m-time').value = meeting.time.slice(0,5);
                 document.getElementById('m-phone').value = meeting.phone;
                 document.getElementById('m-createdBy').value = meeting.created_by;
+                document.getElementById('m-seriousness').value = meeting.seriousness || '';
+                document.getElementById('m-facilities').value = meeting.facilities || '';
                 document.getElementById('m-clientType').value = meeting.client_type;
                 document.getElementById('m-status').value = meeting.status;
                 document.getElementById('m-subscriptionSold').value = meeting.subscription_sold;
@@ -535,10 +624,13 @@
             const id = document.getElementById('meeting-id').value;
             const meeting = {
                 client_name: document.getElementById('m-clientName').value,
+                customer_number: document.getElementById('m-customerNumber').value,
                 date: document.getElementById('m-date').value,
                 time: document.getElementById('m-time').value,
                 phone: document.getElementById('m-phone').value,
                 created_by: document.getElementById('m-createdBy').value,
+                seriousness: document.getElementById('m-seriousness').value,
+                facilities: document.getElementById('m-facilities').value,
                 client_type: document.getElementById('m-clientType').value,
                 status: document.getElementById('m-status').value,
                 subscription_sold: document.getElementById('m-subscriptionSold').value,
