@@ -6,13 +6,9 @@
     <title>לוח פגישות אונליין - סניף נשר</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
     <script>
@@ -37,7 +33,6 @@
       }
     </script>
     <style>
-        /* Global Styles & Glassmorphism [cite: 70-72] */
         body { 
             background-color: #0a0a0f; 
             background-image: 
@@ -64,15 +59,25 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         
-        /* Date Picker Fix for Dark Mode */
+        /* שיפורים ל-Date Picker */
+        input[type="date"] {
+            position: relative;
+        }
         input[type="date"]::-webkit-calendar-picker-indicator {
             filter: invert(1);
             cursor: pointer;
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
         }
         
         @media (max-width: 768px) {
             .mobile-card { @apply glass p-4 rounded-2xl mb-4 border-0; }
         }
+        
+        /* וידוא שהשורות הלחיצות מקבלות סמן יד */
+        .cursor-pointer { cursor: pointer !important; }
     </style>
 </head>
 <body class="antialiased tracking-tight">
@@ -172,7 +177,9 @@
                                 <tr>
                                     <th class="px-6 py-4">מועד</th>
                                     <th class="px-6 py-4">לקוח</th>
-                                    <th class="px-6 py-4">פרטים (לחץ לעריכה)</th> <th class="px-6 py-4">סטטוס (לחץ לעריכה)</th> <th class="px-6 py-4">נציג</th>
+                                    <th class="px-6 py-4">פרטים (לחץ לעריכה)</th>
+                                    <th class="px-6 py-4">סטטוס (לחץ לעריכה)</th>
+                                    <th class="px-6 py-4">נציג</th>
                                     <th class="px-6 py-4">מנוי</th>
                                     <th class="px-6 py-4"></th>
                                 </tr>
@@ -313,8 +320,7 @@
         const currentWeek = getCurrentWeek();
 
         // ----------------------------------------------------
-        // תיקון תאריך: המרה מתצוגת YYYY-MM-DD לתצוגה ישראלית DD/MM/YYYY
-        // [cite: 84]
+        // פונקציית עזר: המרה מתצוגת YYYY-MM-DD לתצוגה ישראלית DD/MM/YYYY
         // ----------------------------------------------------
         function formatDateIL(dateStr) {
             if(!dateStr) return '';
@@ -374,7 +380,7 @@
             if (!state.user || !state.user.id) { alert('שגיאה: לא ניתן לזהות משתמש'); return; }
             meeting.user_id = state.user.id; 
             const { error } = await sb.from('meetings').upsert(meeting);
-            if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
+            if (error) { alert('שגיאה בשמירה (ודא שהוספת את העמודות seriousness ו-facilities ב-Supabase): ' + error.message); return; }
             closeModal(); fetchMeetings();
         }
 
@@ -395,8 +401,7 @@
             let upcomingHtml = '<ul class="space-y-2">';
             if(upcoming.length === 0) upcomingHtml += '<li class="text-slate-500 text-xs">אין פגישות קרובות</li>';
             upcoming.forEach(m => {
-                // תיקון אינטראקטיביות: הוספת onclick ומזהה [cite: 81]
-                // שימוש בפונקציה הגלובלית openModalById כדי לעקוף את בעיית ה-Event Listeners
+                // תיקון אינטראקטיביות
                 upcomingHtml += `<li class="flex justify-between text-xs text-white bg-white/5 hover:bg-white/10 p-2 rounded cursor-pointer transition-colors" onclick="openModalById('${m.id}')">
                     <span>${m.time.slice(0,5)} ${m.client_name}</span>
                     <span class="text-primary-300 font-medium">${formatDateIL(m.date).slice(0,5)}</span>
@@ -601,11 +606,13 @@
         document.getElementById('logout-btn').onclick = () => sb.auth.signOut();
 
         // ----------------------------------------------------
-        // פונקציית עזר גלובלית לטיפול בלחיצות (תיקון הבאג)
+        // פתרון מוחלט לבעיית הלחיצות: הגדרת פונקציה גלובלית
         // ----------------------------------------------------
         window.openModalById = function(id) {
+            console.log('Trying to open modal for ID:', id); // בדיקה בקונסול
             const meeting = state.meetings.find(m => m.id === id);
             if(meeting) openModal(meeting);
+            else console.error('Meeting not found');
         }
 
         function openModal(meeting = null) {
@@ -661,7 +668,7 @@
             saveMeeting(meeting);
         };
 
-        // לוגיקת ייצוא לאקסל 
+        // ייצוא לאקסל
         els.exportBtn.onclick = () => {
             if(!state.meetings.length) { alert('אין נתונים לייצוא'); return; }
             
@@ -682,7 +689,7 @@
                     m.facilities || '',
                     m.client_type,
                     m.subscription_sold,
-                    (m.notes || '').replace(/,/g, ' ') // ניקוי פסיקים כדי לא לשבור את ה-CSV
+                    (m.notes || '').replace(/,/g, ' ') // מניעת שבירת שורות ב-CSV
                 ];
                 csvContent += row.join(",") + "\n";
             });
