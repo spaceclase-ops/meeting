@@ -175,7 +175,12 @@
                         <table class="w-full text-sm text-right border-separate border-spacing-y-2 px-2">
                             <thead class="text-slate-400 font-bold text-xs uppercase tracking-wider hidden md:table-header-group">
                                 <tr>
-                                    <th class="px-6 py-4">מועד</th>
+                                    <th class="px-6 py-4">
+                                        <button id="sort-time-btn" type="button" class="inline-flex items-center gap-1.5 hover:text-primary-300 transition-colors cursor-pointer select-none" title="מיון לפי שעה">
+                                            מועד
+                                            <i data-lucide="arrow-up-narrow-wide" class="w-3.5 h-3.5 text-primary-400"></i>
+                                        </button>
+                                    </th>
                                     <th class="px-6 py-4">לקוח</th>
                                     <th class="px-6 py-4">פרטים (לחץ לעריכה)</th>
                                     <th class="px-6 py-4">סטטוס (לחץ לעריכה)</th>
@@ -329,7 +334,7 @@
         }
 
         let state = {
-            user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: '', chart: null
+            user: null, meetings: [], filterStart: currentWeek.start, filterEnd: currentWeek.end, searchTerm: '', chart: null, sortAsc: true
         };
 
         const els = {
@@ -365,7 +370,8 @@
                 .select('*')
                 .gte('date', state.filterStart)
                 .lte('date', state.filterEnd)
-                .order('created_at', { ascending: false }); 
+                .order('date', { ascending: true })
+                .order('time', { ascending: true });
 
             els.spinner.classList.add('hide');
             if (error) { console.error('Error:', error); return; }
@@ -497,7 +503,11 @@
         }
 
         function renderMeetings() {
-            const filtered = state.meetings.filter(m => m.client_name.includes(state.searchTerm) || (m.phone && m.phone.includes(state.searchTerm)) || m.created_by.includes(state.searchTerm));
+            const sorted = [...state.meetings].sort((a, b) => {
+                if (a.date !== b.date) return a.date.localeCompare(b.date);
+                return state.sortAsc ? (a.time || '').localeCompare(b.time || '') : (b.time || '').localeCompare(a.time || '');
+            });
+            const filtered = sorted.filter(m => (m.client_name || '').includes(state.searchTerm) || (m.phone && m.phone.includes(state.searchTerm)) || (m.created_by || '').includes(state.searchTerm));
             els.tableBody.innerHTML = '';
             if (filtered.length === 0) { els.emptyState.classList.remove('hide'); return; } else { els.emptyState.classList.add('hide'); }
 
@@ -706,6 +716,15 @@
         els.dateStart.onchange = (e) => { state.filterStart = e.target.value; fetchMeetings(); };
         els.dateEnd.onchange = (e) => { state.filterEnd = e.target.value; fetchMeetings(); };
         els.searchInput.oninput = (e) => { state.searchTerm = e.target.value; renderMeetings(); };
+
+        document.getElementById('sort-time-btn').onclick = () => {
+            state.sortAsc = !state.sortAsc;
+            const icon = document.querySelector('#sort-time-btn i');
+            icon.setAttribute('data-lucide', state.sortAsc ? 'arrow-up-narrow-wide' : 'arrow-down-wide-narrow');
+            lucide.createIcons();
+            renderMeetings();
+        };
+
         init();
     </script>
 </body>
