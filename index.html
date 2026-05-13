@@ -504,8 +504,10 @@
 
         function renderMeetings() {
             const sorted = [...state.meetings].sort((a, b) => {
-                if (a.date !== b.date) return a.date.localeCompare(b.date);
-                return state.sortAsc ? (a.time || '').localeCompare(b.time || '') : (b.time || '').localeCompare(a.time || '');
+                const t1 = (a.time || '');
+                const t2 = (b.time || '');
+                if (t1 !== t2) return state.sortAsc ? t1.localeCompare(t2) : t2.localeCompare(t1);
+                return (a.date || '').localeCompare(b.date || '');
             });
             const filtered = sorted.filter(m => (m.client_name || '').includes(state.searchTerm) || (m.phone && m.phone.includes(state.searchTerm)) || (m.created_by || '').includes(state.searchTerm));
             els.tableBody.innerHTML = '';
